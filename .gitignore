@@ -1,0 +1,10 @@
+﻿node_modules/
+.next/
+out/
+dist/
+.env
+prisma/dev.db
+.prisma/
+.DS_Store
+Thumbs.db
+*.log
