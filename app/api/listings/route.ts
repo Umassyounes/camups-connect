@@ -1,151 +1,111 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
-import { sbServer } from "@/lib/supabase/server"
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { sbServer } from "@/lib/supabase/server";
+import { z } from "zod";
 
-/**
- * Expected Prisma model (adapt as needed):
- *
- * model Listing {
- *   id         Int      @id @default(autoincrement())
- *   title      String
- *   description String?
- *   imageUrl   String?
- *   category   String?
- *   priceCents Int
- *   sellerId   String     // Supabase user id
- *   createdAt  DateTime @default(now())
- * }
- */
+const prisma = new PrismaClient();
 
-// ------------------- GET /api/listings -------------------
-// Query params (all optional):
-//   q           - text search in title
-//   category    - exact category string
-//   minPrice    - dollars (e.g., 10)
-//   maxPrice    - dollars (e.g., 200)
-//   page        - 1-based page number (default 1)
-//   limit       - page size (default 20)
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
+const CreateListingSchema = z.object({
+  title: z.string().min(1).max(160),
+  description: z.string().default(""),
+  imageUrl: z.string().url().optional().or(z.literal("")).transform(v => v || null),
+  // allow either priceCents or price (in dollars)
+  priceCents: z.number().int().nonnegative().optional(),
+  price: z.number().nonnegative().optional(),
+  // prefer categoryId (Int). If you only have slugs client-side, send categorySlug instead.
+  categoryId: z.number().int().positive().optional(),
+  categorySlug: z.string().min(1).optional(),
+  condition: z.enum(["NEW", "LIKE_NEW", "GOOD", "USED"]).default("USED"),
+  campus: z.string().default("UMass Boston"),
+});
 
-    const q = searchParams.get("q") ?? undefined
-    const category = searchParams.get("category") ?? undefined
-
-    const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1)
-    const limit = Math.min(
-      Math.max(parseInt(searchParams.get("limit") || "20", 10), 1),
-      50
-    )
-    const skip = (page - 1) * limit
-
-    // prices are provided in dollars in query; convert to cents for DB
-    const minPriceCents = searchParams.get("minPrice")
-      ? Math.round(parseFloat(searchParams.get("minPrice")!) * 100)
-      : undefined
-    const maxPriceCents = searchParams.get("maxPrice")
-      ? Math.round(parseFloat(searchParams.get("maxPrice")!) * 100)
-      : undefined
-
-    const where: any = {}
-
-    if (q) {
-      where.title = { contains: q, mode: "insensitive" }
-    }
-    if (category) {
-      where.category = category
-    }
-    if (minPriceCents != null || maxPriceCents != null) {
-      where.priceCents = {}
-      if (minPriceCents != null) where.priceCents.gte = minPriceCents
-      if (maxPriceCents != null) where.priceCents.lte = maxPriceCents
-    }
-
-    const [items, total] = await Promise.all([
-      prisma.listing.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.listing.count({ where }),
-    ])
-
-    return NextResponse.json({
-      data: items,
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    })
-  } catch (err) {
-    console.error("GET /api/listings error:", err)
-    return NextResponse.json(
-      { error: "Failed to load listings" },
-      { status: 500 }
-    )
-  }
+export async function GET() {
+  const listings = await prisma.listing.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      seller: { select: { id: true, name: true, email: true } },
+      // include category if you want it in responses:
+      // category: { select: { id: true, name: true, slug: true } },
+    },
+  });
+  return NextResponse.json(listings);
 }
 
-// ------------------- POST /api/listings -------------------
-// Body JSON:
-//   {
-//     "title": string,
-//     "description": string (optional),
-//     "imageUrl": string (optional),
-//     "category": string (optional),
-//     "price": number  // dollars, e.g. 45.99
-//   }
 export async function POST(req: Request) {
   try {
-    // Require user (Supabase)
-    const supabase = sbServer()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    // 1) Auth
+    const supabase = sbServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // 2) Map Supabase → local User
+    const localUser = await prisma.user.upsert({
+      where: { supabaseId: user.id },
+      update: {},
+      create: {
+        supabaseId: user.id,
+        email: user.email ?? `no-email-${user.id}@example.local`,
+        name: (user.user_metadata as any)?.full_name ?? "User",
+      },
+    });
 
-    const body = await req.json()
-
-    // Basic validation (adjust to your UI)
-    const title = (body.title ?? "").toString().trim()
-    if (!title) {
+    // 3) Validate body
+    const json = await req.json();
+    const parsed = CreateListingSchema.safeParse(json);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Title is required" },
+        { error: "Validation failed", details: parsed.error.flatten() },
         { status: 400 }
-      )
+      );
     }
 
-    const priceDollars = Number(body.price)
-    if (Number.isNaN(priceDollars) || priceDollars < 0) {
+    const data = parsed.data;
+
+    // 4) Compute priceCents
+    const priceCents =
+      typeof data.priceCents === "number"
+        ? data.priceCents
+        : typeof data.price === "number"
+          ? Math.round(data.price * 100)
+          : null;
+
+    if (priceCents == null) {
       return NextResponse.json(
-        { error: "Price must be a non-negative number" },
+        { error: "priceCents or price is required" },
         { status: 400 }
-      )
+      );
     }
 
-    const priceCents = Math.round(priceDollars * 100)
+    // 5) Resolve category
+    let categoryId: number | null = null;
+    if (typeof data.categoryId === "number") {
+      const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+      if (!cat) return NextResponse.json({ error: "Invalid categoryId" }, { status: 400 });
+      categoryId = cat.id;
+    } else if (data.categorySlug) {
+      const cat = await prisma.category.findUnique({ where: { slug: data.categorySlug } });
+      if (!cat) return NextResponse.json({ error: "Invalid categorySlug" }, { status: 400 });
+      categoryId = cat.id;
+    }
 
+    // 6) Create listing
     const created = await prisma.listing.create({
       data: {
-        title,
-        description: body.description ?? "",
-        imageUrl: body.imageUrl ?? null,
-        category: body.category ?? null,
+        title: data.title,
+        description: data.description,
+        imageUrl: data.imageUrl ?? null,
+        condition: data.condition,
+        campus: data.campus,
         priceCents,
-        sellerId: user.id, // store Supabase user id (string)
+        sellerId: localUser.id,
+        ...(categoryId ? { categoryId } : {}),
       },
-    })
+    });
 
-    return NextResponse.json(created, { status: 201 })
+    return NextResponse.json(created, { status: 201 });
   } catch (err) {
-    console.error("POST /api/listings error:", err)
-    return NextResponse.json(
-      { error: "Failed to create listing" },
-      { status: 500 }
-    )
+    console.error("POST /api/listings error:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

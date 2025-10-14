@@ -4,12 +4,14 @@ import FilterBar from '../components/FilterBar'
 import BottomNav from '../components/BottomNav'
 
 export default async function Marketplace() {
-  const categories = await prisma.category.findMany({
+  const client = prisma as any
+
+  const categories: { id: string; name: string }[] = await client.category.findMany({
     orderBy: { name: 'asc' },
     select: { id: true, name: true },
   })
 
-  const listings = await prisma.listing.findMany({
+  const listings = await client.listing.findMany({
     orderBy: { createdAt: 'desc' },
     include: { category: true, seller: true },
   })
@@ -30,10 +32,10 @@ export default async function Marketplace() {
         ))}
       </div>
 
-      <FilterBar categories={categories} />
+      <FilterBar categories={categories as unknown as { id: number; name: string }[]} />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {listings.map(l => <ListingCard key={l.id} listing={l} />)}
+        {listings.map((l: any) => <ListingCard key={l.id} listing={l} />)}
       </section>
 
       <BottomNav />

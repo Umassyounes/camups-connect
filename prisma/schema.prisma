@@ -3,50 +3,48 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" // keep for now; we can switch to Postgres later
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  createdAt DateTime  @default(now())
-  listings  Listing[]
-  messages  Message[] @relation("UserMessages")
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  supabaseId String?   @unique // NEW: link to Supabase auth.users.id (UUID text)
+  createdAt  DateTime  @default(now())
+  listings   Listing[]
+  messages   Message[] @relation("UserMessages")
 }
 
 model Category {
   id       Int       @id @default(autoincrement())
-  name     String    @unique
+  name     String
   slug     String    @unique
   listings Listing[]
 }
 
 model Listing {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   description String
   priceCents  Int
   imageUrl    String?
-  condition   Condition @default(USED)
-  campus      String    @default("UMass Boston")
-  isSold      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  condition   String   @default("USED")
+  campus      String   @default("UMass Boston")
+  isSold      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  sellerId   Int
-  seller     User      @relation(fields: [sellerId], references: [id])
-  categoryId Int
-  category   Category  @relation(fields: [categoryId], references: [id])
+  // relations
+  sellerId Int
+  seller   User @relation(fields: [sellerId], references: [id])
+
+  // if you have category fields, keep them here (categoryId/category)
+
+  // NEW: back-relation for Message.listing
   messages   Message[]
-}
-
-enum Condition {
-  NEW
-  LIKE_NEW
-  GOOD
-  FAIR
-  USED
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
 }
 
 model Message {
@@ -55,8 +53,8 @@ model Message {
   createdAt DateTime @default(now())
 
   listingId Int
-  listing   Listing  @relation(fields: [listingId], references: [id])
+  listing   Listing @relation(fields: [listingId], references: [id])
 
-  senderId  Int
-  sender    User     @relation("UserMessages", fields: [senderId], references: [id])
+  senderId Int
+  sender   User @relation("UserMessages", fields: [senderId], references: [id])
 }
