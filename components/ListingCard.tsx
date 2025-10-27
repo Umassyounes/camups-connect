@@ -15,7 +15,8 @@ export default function ListingCard({ listing }: { listing: any }) {
           <span className="whitespace-nowrap text-sm font-semibold">{price}</span>
         </div>
         <p className="line-clamp-2 text-sm text-gray-600">{listing.description}</p>
-        <div className="text-xs text-gray-500">{listing.category?.name} • {listing.condition}</div>
+        {/* access the relation using the exact name from Prisma schema */}
+        <div className="text-xs text-gray-500">{listing.Category?.name} • {listing.condition}</div>
       </div>
     </Link>
   )

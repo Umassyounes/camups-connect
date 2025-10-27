@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/db'
+import { prisma } from '@/lib/prisma'
 
 export default async function MyListingsPage() {
   const listings = await prisma.listing.findMany({
@@ -28,7 +28,7 @@ export default async function MyListingsPage() {
                 </button>
               )}
               <button
-                formaction={`/api/listings/${l.id}`}
+                formAction={`/api/listings/${l.id}`}
                 formMethod="delete"
                 className="rounded-lg border px-3 py-1 text-sm"
               >

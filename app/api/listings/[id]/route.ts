@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { prisma } from '../../../../lib/db'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const id = Number(params.id)

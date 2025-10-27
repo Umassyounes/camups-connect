@@ -1,4 +1,5 @@
-import { prisma } from '../lib/db'
+'use client' // keep as in your original file (this line may or may not be present)
+import { prisma } from '@/lib/prisma'
 import ListingCard from '../components/ListingCard'
 import FilterBar from '../components/FilterBar'
 import BottomNav from '../components/BottomNav'
@@ -11,9 +12,14 @@ export default async function Marketplace() {
     select: { id: true, name: true },
   })
 
+  // NOTE: Use the exact relation name from your Prisma schema (case-sensitive).
+  // The relation in the schema appears to be "Category" (capital C), so we include it like this:
   const listings = await client.listing.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { category: true, seller: true },
+    include: {
+      Category: { select: { id: true, name: true, slug: true } },
+      seller: { select: { id: true, name: true, email: true } },
+    },
   })
 
   return (
@@ -32,6 +38,7 @@ export default async function Marketplace() {
         ))}
       </div>
 
+      {/* If FilterBar expects categories as numbers, cast if needed */}
       <FilterBar categories={categories as unknown as { id: number; name: string }[]} />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
