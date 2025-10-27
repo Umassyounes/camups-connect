@@ -1,19 +1,32 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { sbServer } from "@/lib/supabase/server";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 const CreateListingSchema = z.object({
   title: z.string().min(1).max(160),
   description: z.string().default(""),
   imageUrl: z.string().url().optional().or(z.literal("")).transform(v => v || null),
-  // allow either priceCents or price (in dollars)
-  priceCents: z.number().int().nonnegative().optional(),
-  price: z.number().nonnegative().optional(),
+   // allow either priceCents or price (in dollars)
+  priceCents: z
+    .preprocess(
+      value => (value === "" ? undefined : value),
+      z.coerce.number().int().nonnegative()
+    )
+    .optional(),
+  price: z
+    .preprocess(
+      value => (value === "" ? undefined : value),
+      z.coerce.number().nonnegative()
+    )
+    .optional(),
   // prefer categoryId (Int). If you only have slugs client-side, send categorySlug instead.
-  categoryId: z.number().int().positive().optional(),
+  categoryId: z
+    .preprocess(
+      value => (value === "" ? undefined : value),
+      z.coerce.number().int().positive()
+    )
+    .optional(),
   categorySlug: z.string().min(1).optional(),
   condition: z.enum(["NEW", "LIKE_NEW", "GOOD", "USED"]).default("USED"),
   campus: z.string().default("UMass Boston"),
@@ -61,12 +74,25 @@ export async function POST(req: Request) {
 
     const data = parsed.data;
 
+    const parsedPriceCents =
+      typeof data.priceCents === "number" && !Number.isNaN(data.priceCents)
+        ? data.priceCents
+        : undefined;
+    const parsedPrice =
+      typeof data.price === "number" && !Number.isNaN(data.price)
+        ? data.price
+        : undefined;
+    const parsedCategoryId =
+      typeof data.categoryId === "number" && !Number.isNaN(data.categoryId)
+        ? data.categoryId
+        : undefined;
+
     // 4) Compute priceCents
     const priceCents =
-      typeof data.priceCents === "number"
-        ? data.priceCents
-        : typeof data.price === "number"
-          ? Math.round(data.price * 100)
+      typeof parsedPriceCents === "number"
+        ? parsedPriceCents
+        : typeof parsedPrice === "number"
+          ? Math.round(parsedPrice * 100)
           : null;
 
     if (priceCents == null) {
@@ -78,8 +104,8 @@ export async function POST(req: Request) {
 
     // 5) Resolve category
     let categoryId: number | null = null;
-    if (typeof data.categoryId === "number") {
-      const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+    if (typeof parsedCategoryId === "number") {
+      const cat = await prisma.category.findUnique({ where: { id: parsedCategoryId } });
       if (!cat) return NextResponse.json({ error: "Invalid categoryId" }, { status: 400 });
       categoryId = cat.id;
     } else if (data.categorySlug) {
@@ -98,7 +124,7 @@ export async function POST(req: Request) {
         campus: data.campus,
         priceCents,
         sellerId: localUser.id,
-        ...(categoryId ? { categoryId } : {}),
+        ...(categoryId !== null ? { categoryId } : {}),
       },
     });
 
@@ -108,4 +134,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
