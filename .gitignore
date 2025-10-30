@@ -1,13 +1,29 @@
-﻿/node_modules/
+﻿# dependencies
+/node_modules/
+.pnp
+.pnp.*
+
+# build output
 .next/
 out/
 dist/
-.env
+build/
+
+# local databases
 prisma/dev.db
-.prisma/
+
+# environment files
+.env
+.env.local
+.env.*
+
+# system files
 .DS_Store
 Thumbs.db
+
+# logs
 *.log
-.env.local
+
+# generated folders
 /app/generated/
-/prisma/dev.db
+

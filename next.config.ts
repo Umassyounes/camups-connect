@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Next 15: prisma must remain external so its engines load correctly
+  serverExternalPackages: ['@prisma/client', 'prisma'],
 };
 
 export default nextConfig;
