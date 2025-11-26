@@ -53,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
                   <a href="/events" className="hover:text-primary transition-colors">Events</a>
                   <a href="/" className="hover:text-primary transition-colors">Marketplace</a>
+                  <a href="/reviews" className="hover:text-primary transition-colors">Reviews</a>
                   <a href="/my" className="hover:text-primary transition-colors">My Listings</a>
                   <a href="/profile" className="hover:text-primary transition-colors">Profile</a>
                   <AdminNavLink />

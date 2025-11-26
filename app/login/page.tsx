@@ -145,7 +145,7 @@ export default function LoginPage() {
             </div>
             <button 
               disabled={isLoading}
-              className="w-full rounded-lg bg-primary py-3 text-white font-medium shadow-subtle hover:bg-primary-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-blue-600 py-3 text-white font-bold shadow-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Sending..." : "Send Code"}
             </button>
@@ -170,7 +170,7 @@ export default function LoginPage() {
             </div>
             <button 
               disabled={isLoading || token.length !== 6}
-              className="w-full rounded-lg bg-primary py-3 text-white font-medium shadow-subtle hover:bg-primary-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-blue-600 py-3 text-white font-bold shadow-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Verifying..." : "Verify Code"}
             </button>

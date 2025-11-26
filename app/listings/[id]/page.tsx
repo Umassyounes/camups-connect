@@ -8,6 +8,10 @@ import ReportButton from "@/components/ReportButton"
 import ProBadge from "@/components/ProBadge"
 import BoostUsageIndicator from "@/components/BoostUsageIndicator"
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
+
 type Listing = {
   id: number
   title: string
@@ -61,12 +65,17 @@ export default function ListingDetailPage({ params }: PageProps) {
     async function fetchData() {
       try {
         // Fetch listing
+        console.log('🔍 Fetching listing with ID:', listingId)
         const listingRes = await fetch(`/api/listings/${listingId}`)
+        console.log('🔍 Listing API response status:', listingRes.status)
+        
         if (!listingRes.ok) {
-          router.push('/404')
+          console.error('❌ Listing not found, API returned:', listingRes.status)
+          setLoading(false)
           return
         }
         const listingData = await listingRes.json()
+        console.log('✅ Listing data received:', listingData)
         setListing(listingData.data)
 
         // Fetch current user
@@ -336,7 +345,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                   <button 
                     onClick={handleMessageSeller}
                     disabled={actionLoading}
-                    className="w-full bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition font-medium shadow-subtle disabled:opacity-50"
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold shadow-lg disabled:opacity-50"
                   >
                     {actionLoading ? 'Opening conversation...' : '💬 Message Seller'}
                   </button>
@@ -351,7 +360,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                     <button 
                       onClick={handleMarkAsSold}
                       disabled={actionLoading}
-                      className="w-full bg-success text-white py-3 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 shadow-subtle"
+                      className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-bold disabled:opacity-50 shadow-lg"
                     >
                       {actionLoading ? 'Processing...' : '✓ Mark as Sold'}
                     </button>
@@ -361,7 +370,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                       <button
                         onClick={handleBoostListing}
                         disabled={boostLoading}
-                        className="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary/10 transition font-medium disabled:opacity-50 shadow-subtle"
+                        className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-bold disabled:opacity-50 shadow-lg"
                       >
                         {boostLoading ? 'Boosting...' : '🔥 Boost Listing ($1 / 24h)'}
                       </button>
@@ -374,7 +383,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                   <button 
                     onClick={handleDelete}
                     disabled={actionLoading}
-                    className="w-full bg-error text-white py-3 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 shadow-subtle"
+                    className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-bold disabled:opacity-50 shadow-lg"
                   >
                     {actionLoading ? 'Deleting...' : '🗑️ Delete Listing'}
                   </button>
@@ -383,12 +392,12 @@ export default function ListingDetailPage({ params }: PageProps) {
 
               {/* Admin Controls */}
               {!isOwnListing && isAdmin && (
-                <div className="space-y-2 border-t border-warning/30 pt-3">
-                  <p className="text-xs text-warning font-semibold uppercase tracking-wide">Admin Actions</p>
+                <div className="space-y-2 border-t border-red-300 pt-3">
+                  <p className="text-xs text-red-600 font-semibold uppercase tracking-wide">Admin Actions</p>
                   <button 
                     onClick={handleDelete}
                     disabled={actionLoading}
-                    className="w-full bg-warning text-white py-3 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 shadow-subtle"
+                    className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 shadow-subtle"
                   >
                     {actionLoading ? 'Deleting...' : '🛡️ Admin: Delete Listing'}
                   </button>

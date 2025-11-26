@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    console.log('🔍 API: Fetching listing with ID:', id, 'Type:', typeof id)
     const supabase = await sbServer()
 
     const { data: listing, error } = await supabase
@@ -16,13 +17,15 @@ export async function GET(
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
-        paymentOptions:ListingPaymentOption(paymentMethodType)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
       `)
       .eq('id', parseInt(id))
       .single()
 
+    console.log('🔍 API: Query result - error:', error, 'listing:', listing ? `Found listing ${listing.id}` : 'null')
+
     if (error || !listing) {
+      console.error('❌ API: Listing not found. Error:', error)
       return NextResponse.json(
         { error: 'Listing not found' },
         { status: 404 }
@@ -31,10 +34,7 @@ export async function GET(
 
     const normalizedListing = listing ? {
       ...listing,
-      seller: withDerivedProFlag(listing.seller),
-      paymentOptions: Array.isArray(listing.paymentOptions)
-        ? listing.paymentOptions.map((opt: any) => opt.paymentMethodType)
-        : [],
+      seller: withDerivedProFlag(listing.seller)
     } : null
 
     return NextResponse.json({ data: normalizedListing })
@@ -109,8 +109,7 @@ export async function PATCH(
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
-        paymentOptions:ListingPaymentOption(paymentMethodType)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
       `)
       .single()
 
@@ -123,10 +122,7 @@ export async function PATCH(
 
     const normalizedListing = updatedListing ? {
       ...updatedListing,
-      seller: withDerivedProFlag(updatedListing.seller),
-      paymentOptions: Array.isArray(updatedListing.paymentOptions)
-        ? updatedListing.paymentOptions.map((opt: any) => opt.paymentMethodType)
-        : [],
+      seller: withDerivedProFlag(updatedListing.seller)
     } : null
 
     return NextResponse.json({ data: normalizedListing })

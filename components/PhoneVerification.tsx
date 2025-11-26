@@ -153,7 +153,7 @@ export default function PhoneVerification({ onVerified, initialPhone = '' }: Pho
             <button
               onClick={sendCode}
               disabled={loading || phone.length < 10}
-              className="w-full rounded-lg bg-primary px-6 py-3 text-white font-medium shadow-subtle hover:bg-primary-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-blue-600 px-6 py-3 text-white font-bold shadow-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -218,7 +218,7 @@ export default function PhoneVerification({ onVerified, initialPhone = '' }: Pho
             <button
               onClick={verifyCode}
               disabled={loading || code.length !== 6}
-              className="w-full rounded-lg bg-primary px-6 py-3 text-white font-medium shadow-subtle hover:bg-primary-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-blue-600 px-6 py-3 text-white font-bold shadow-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

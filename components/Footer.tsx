@@ -126,6 +126,12 @@ export default function Footer() {
                   Marketplace
                 </a>
               </li>
+              <li>
+                <a href="/reviews" className="text-slate-600 dark:text-white/70 hover:text-sky-500 dark:hover:text-sky-400 transition flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  Reviews
+                </a>
+              </li>
             </ul>
           </div>
 
