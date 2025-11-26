@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import SearchBar from "@/components/SearchBar"
-import BannerAdSlot from "@/components/BannerAdSlot"
 
 type Event = {
   id: number
@@ -342,15 +341,9 @@ export default function EventsPage() {
         </button>
       </div>
 
-      <div className="mb-8">
-        <BannerAdSlot
-          headline="Promote your club or shop"
-          body="Reserve a sponsored event slot for as low as $5 and reach thousands of weekly event views."
-          sponsor="Sponsored spotlight"
-          ctaLabel="Request a slot"
-          href="/events"
-          price="$5–$10 per event"
-        />
+      {/* Sponsor Banner - Coming Soon */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-8 text-center">
+        <p className="text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
       </div>
 
       {/* Events Grid */}

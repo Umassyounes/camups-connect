@@ -1,7 +1,6 @@
 ﻿import { sbServer } from "@/lib/supabase/server"
 import ListingCard from "@/components/ListingCard"
 import SearchBar from "@/components/SearchBar"
-import BannerAdSlot from "@/components/BannerAdSlot"
 import FilterSortButtons from "@/components/FilterSortButtons"
 import type { Database } from "@/lib/supabase/databaseTypes"
 import { isProfilePro } from "@/lib/utils/pro"
@@ -140,7 +139,10 @@ export default async function Marketplace({
           </a>
         </div>
 
-    <BannerAdSlot />
+        {/* Sponsor Banner - Coming Soon */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-6 text-center">
+          <p className="text-gray-600 font-medium">📢 Sponsored Content Coming Soon</p>
+        </div>
 
         {listings.length === 0 ? (
           <div className="text-center py-16 text-foreground-secondary">
