@@ -11,14 +11,6 @@ declare module "@/lib/types/pro" {
 	export const DEFAULT_PRO_STATUS: any
 }
 
-declare module "@/lib/types/payment" {
-	export type PaymentMethod = any
-	export type PaymentMethodDisplay = any
-	export type CreatePaymentMethodInput = any
-	export type UpdatePaymentMethodInput = any
-	export const PAYMENT_METHOD_INFO: any
-}
-
 declare module "@/lib/supabase/server" {
 	export const sbServer: any
 }
