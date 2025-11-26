@@ -184,10 +184,10 @@ export default function PhoneVerification({ onVerified, initialPhone = '' }: Pho
 
             {devCode && (
               <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center">
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mb-1">
+                <p className="text-xs text-yellow-900 dark:text-yellow-200 font-medium mb-1">
                   🔧 Development Mode
                 </p>
-                <p className="text-lg font-mono font-bold text-yellow-700 dark:text-yellow-300">
+                <p className="text-lg font-mono font-bold text-yellow-900 dark:text-yellow-100">
                   {devCode}
                 </p>
               </div>

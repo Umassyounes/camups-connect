@@ -5,6 +5,8 @@ import Link from "next/link"
 import ImageCarousel from "@/components/ImageCarousel"
 import VerifiedBadge from "@/components/VerifiedBadge"
 import ReportButton from "@/components/ReportButton"
+import ProBadge from "@/components/ProBadge"
+import BoostUsageIndicator from "@/components/BoostUsageIndicator"
 
 type Listing = {
   id: number
@@ -19,6 +21,8 @@ type Listing = {
   isSold: boolean
   createdAt: string
   updatedAt: string
+  boostedUntil?: string | null
+  boostedByPro?: boolean
   category: {
     id: number
     name: string
@@ -29,6 +33,7 @@ type Listing = {
     avatarUrl: string | null
     createdAt: string
     isVerified: boolean
+    isPro?: boolean
   }
 }
 
@@ -39,8 +44,10 @@ type PageProps = {
 export default function ListingDetailPage({ params }: PageProps) {
   const [listing, setListing] = useState<Listing | null>(null)
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+  const [boostLoading, setBoostLoading] = useState(false)
   const [listingId, setListingId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -67,6 +74,7 @@ export default function ListingDetailPage({ params }: PageProps) {
         if (profileRes.ok) {
           const profileData = await profileRes.json()
           setCurrentUserId(profileData.data?.id || null)
+          setIsAdmin(profileData.data?.isAdmin || false)
         }
       } catch (error) {
         console.error('Failed to fetch listing:', error)
@@ -159,6 +167,39 @@ export default function ListingDetailPage({ params }: PageProps) {
     }
   }
 
+  async function handleBoostListing() {
+    if (!listing) return
+    setBoostLoading(true)
+    try {
+      const res = await fetch(`/api/listings/${listing.id}/boost`, {
+        method: 'POST',
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        // Check if it's a boost limit error
+        if (data.code === 'BOOST_LIMIT_REACHED') {
+          alert(`${data.error}\n\nYou've used ${data.used}/${data.limit} free boosts this month.`)
+          return
+        }
+        alert(data.error || 'Failed to boost listing')
+        return
+      }
+
+      if (data.data?.listing) {
+        setListing(prev => prev ? { ...prev, ...data.data.listing } : data.data.listing)
+      } else if (data.data?.boostedUntil) {
+        setListing(prev => prev ? { ...prev, boostedUntil: data.data.boostedUntil } : prev)
+      }
+      alert('Listing boosted for 24 hours! 🚀')
+    } catch (error) {
+      console.error('Failed to boost listing:', error)
+      alert('Failed to boost listing')
+    } finally {
+      setBoostLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -186,6 +227,8 @@ export default function ListingDetailPage({ params }: PageProps) {
   const isOwnListing = currentUserId === listing.seller.id
   const price = `$${(listing.priceCents / 100).toFixed(2)}`
   const sellerName = listing.seller.name || "Anonymous"
+  const isBoosted = Boolean(listing.boostedUntil && new Date(listing.boostedUntil) > new Date())
+  const boostedUntilDisplay = listing.boostedUntil ? new Date(listing.boostedUntil).toLocaleString() : null
   
   // Use images array, fallback to imageUrl, then empty array
   const displayImages = listing.images && listing.images.length > 0
@@ -196,11 +239,11 @@ export default function ListingDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <div className="bg-[var(--card-bg)] rounded-xl border border-border overflow-hidden shadow-float">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Image Carousel */}
-          <div className="p-6">
-            <ImageCarousel images={displayImages} alt={listing.title} />
+        <div className="bg-[var(--card-bg)] rounded-xl border border-border overflow-hidden shadow-float">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Image Carousel */}
+            <div className="p-6">
+              <ImageCarousel images={displayImages} alt={listing.title} />
           </div>
 
           {/* Details */}
@@ -216,7 +259,19 @@ export default function ListingDetailPage({ params }: PageProps) {
                   />
                 )}
               </div>
-              <p className="text-3xl font-bold text-primary">{price}</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-3xl font-bold text-primary">{price}</p>
+                {isBoosted && (
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 bg-orange-500/10 px-3 py-1 rounded-full">
+                    🔥 Boosted
+                    {boostedUntilDisplay && (
+                      <span className="text-[11px] font-normal text-orange-600/80">
+                        until {new Date(listing.boostedUntil!).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2 text-sm">
@@ -265,6 +320,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{sellerName}</p>
                     <VerifiedBadge isVerified={listing.seller.isVerified} size="sm" />
+                    {listing.seller.isPro && <ProBadge size="sm" />}
                   </div>
                   <p className="text-sm text-foreground-secondary">
                     Member since {new Date(listing.seller.createdAt).getFullYear()}
@@ -300,6 +356,20 @@ export default function ListingDetailPage({ params }: PageProps) {
                       {actionLoading ? 'Processing...' : '✓ Mark as Sold'}
                     </button>
                   )}
+                  {!listing.isSold && (
+                    <>
+                      <button
+                        onClick={handleBoostListing}
+                        disabled={boostLoading}
+                        className="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary/10 transition font-medium disabled:opacity-50 shadow-subtle"
+                      >
+                        {boostLoading ? 'Boosting...' : '🔥 Boost Listing ($1 / 24h)'}
+                      </button>
+                      <div className="flex justify-center pt-1">
+                        <BoostUsageIndicator />
+                      </div>
+                    </>
+                  )}
                   
                   <button 
                     onClick={handleDelete}
@@ -307,6 +377,20 @@ export default function ListingDetailPage({ params }: PageProps) {
                     className="w-full bg-error text-white py-3 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 shadow-subtle"
                   >
                     {actionLoading ? 'Deleting...' : '🗑️ Delete Listing'}
+                  </button>
+                </div>
+              )}
+
+              {/* Admin Controls */}
+              {!isOwnListing && isAdmin && (
+                <div className="space-y-2 border-t border-warning/30 pt-3">
+                  <p className="text-xs text-warning font-semibold uppercase tracking-wide">Admin Actions</p>
+                  <button 
+                    onClick={handleDelete}
+                    disabled={actionLoading}
+                    className="w-full bg-warning text-white py-3 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 shadow-subtle"
+                  >
+                    {actionLoading ? 'Deleting...' : '🛡️ Admin: Delete Listing'}
                   </button>
                 </div>
               )}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sbServer } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
+import { withDerivedProFlag } from "@/lib/utils/pro"
 
 export async function GET(
   req: NextRequest,
@@ -15,7 +16,8 @@ export async function GET(
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(*)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
+        paymentOptions:ListingPaymentOption(paymentMethodType)
       `)
       .eq('id', parseInt(id))
       .single()
@@ -27,7 +29,15 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ data: listing })
+    const normalizedListing = listing ? {
+      ...listing,
+      seller: withDerivedProFlag(listing.seller),
+      paymentOptions: Array.isArray(listing.paymentOptions)
+        ? listing.paymentOptions.map((opt: any) => opt.paymentMethodType)
+        : [],
+    } : null
+
+    return NextResponse.json({ data: normalizedListing })
   } catch (error) {
     console.error('Error fetching listing:', error)
     return NextResponse.json(
@@ -99,7 +109,8 @@ export async function PATCH(
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(*)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, createdAt, isVerified, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
+        paymentOptions:ListingPaymentOption(paymentMethodType)
       `)
       .single()
 
@@ -110,7 +121,15 @@ export async function PATCH(
       )
     }
 
-    return NextResponse.json({ data: updatedListing })
+    const normalizedListing = updatedListing ? {
+      ...updatedListing,
+      seller: withDerivedProFlag(updatedListing.seller),
+      paymentOptions: Array.isArray(updatedListing.paymentOptions)
+        ? updatedListing.paymentOptions.map((opt: any) => opt.paymentMethodType)
+        : [],
+    } : null
+
+    return NextResponse.json({ data: normalizedListing })
   } catch (error) {
     console.error('Error updating listing:', error)
     return NextResponse.json(

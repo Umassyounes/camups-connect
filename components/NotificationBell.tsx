@@ -170,9 +170,9 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-lg shadow-lg z-50 max-h-[32rem] overflow-hidden flex flex-col" style={{ backgroundColor: 'var(--card)' }}>
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-[32rem] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border bg-card">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <h3 className="font-semibold text-lg text-foreground">Notifications</h3>
             {unreadCount > 0 && (
               <button
@@ -185,13 +185,13 @@ export default function NotificationBell() {
           </div>
 
           {/* Notifications List */}
-          <div className="flex-1 overflow-y-auto bg-card">
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
             {isLoading && notifications.length === 0 ? (
-              <div className="p-8 text-center text-foreground-secondary bg-card">
+              <div className="p-8 text-center text-foreground-secondary bg-white dark:bg-gray-900">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-foreground-secondary bg-card">
+              <div className="p-8 text-center text-foreground-secondary bg-white dark:bg-gray-900">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-12 w-12 mx-auto mb-2 opacity-50"
@@ -209,13 +209,13 @@ export default function NotificationBell() {
                 <p>No notifications yet</p>
               </div>
             ) : (
-              <div className="bg-card">
+              <div className="bg-white dark:bg-gray-900">
                 {notifications.map(notification => (
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left p-4 border-b border-border hover:bg-background-secondary transition-colors ${
-                      !notification.read ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-card'
+                    className={`w-full text-left p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                      !notification.read ? 'bg-blue-50 dark:bg-blue-950/30' : 'bg-white dark:bg-gray-900'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -277,7 +277,7 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-border text-center bg-card">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-white dark:bg-gray-900">
               <button
                 onClick={() => {
                   setIsOpen(false);

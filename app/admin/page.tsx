@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { sbServer } from '@/lib/supabase/server';
 
+export const runtime = 'nodejs';
+
 function formatNumber(value: number) {
   return value.toLocaleString('en-US');
 }

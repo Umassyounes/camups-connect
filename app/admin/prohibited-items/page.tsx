@@ -157,11 +157,11 @@ export default function ProhibitedItemsPage() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-      case 'low': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+      case 'critical': return 'bg-red-100 text-red-800'
+      case 'high': return 'bg-orange-100 text-orange-800'
+      case 'medium': return 'bg-yellow-100 text-yellow-800'
+      case 'low': return 'bg-blue-100 text-blue-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -173,11 +173,11 @@ export default function ProhibitedItemsPage() {
         <div>
           <button
             onClick={() => router.back()}
-            className="text-blue-600 dark:text-blue-400 hover:underline mb-2"
+            className="text-blue-600 hover:underline mb-2"
           >
             ← Back to Dashboard
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900">
             🚫 Prohibited Items Management
           </h1>
         </div>
@@ -200,14 +200,14 @@ export default function ProhibitedItemsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+      <div className="bg-white p-4 rounded-lg shadow space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-200">Type</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Type</label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-700"
+              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
             >
               <option value="">All Types</option>
               <option value="keyword">Keyword</option>
@@ -216,11 +216,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-200">Severity</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Severity</label>
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-700"
+              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
             >
               <option value="">All Severities</option>
               <option value="critical">Critical</option>
@@ -230,11 +230,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-200">Category</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Category</label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-700"
+              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
             >
               <option value="">All Categories</option>
               {uniqueCategories.map(cat => (
@@ -243,11 +243,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-200">Status</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Status</label>
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white [&>option]:text-gray-900 [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-700"
+              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
             >
               <option value="">All</option>
               <option value="true">Active</option>
@@ -258,8 +258,8 @@ export default function ProhibitedItemsPage() {
       </div>
 
       {/* Items List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b dark:border-gray-700">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="px-6 py-4 border-b">
           <h2 className="text-xl font-semibold">Prohibited Items ({items.length})</h2>
         </div>
         
@@ -272,27 +272,27 @@ export default function ProhibitedItemsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Pattern</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Severity</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pattern</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y dark:divide-gray-700">
+              <tbody className="divide-y">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div className="font-mono text-sm text-gray-900 dark:text-white">{item.pattern}</div>
+                      <div className="font-mono text-sm text-gray-900">{item.pattern}</div>
                       {item.description && (
                         <div className="text-xs text-gray-500 mt-1">{item.description}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 rounded">
+                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded">
                         {item.type}
                       </span>
                     </td>
@@ -301,14 +301,14 @@ export default function ProhibitedItemsPage() {
                         {item.severity}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{item.category}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">{item.category}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => handleToggleActive(item)}
                         className={`px-2 py-1 text-xs font-medium rounded ${
                           item.isActive
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {item.isActive ? 'Active' : 'Inactive'}
@@ -318,13 +318,13 @@ export default function ProhibitedItemsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => openEditModal(item)}
-                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                          className="text-blue-600 hover:underline text-sm"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-red-600 dark:text-red-400 hover:underline text-sm"
+                          className="text-red-600 hover:underline text-sm"
                         >
                           Delete
                         </button>
@@ -341,29 +341,29 @@ export default function ProhibitedItemsPage() {
       {/* Add/Edit Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">
               {editingItem ? 'Edit Prohibited Item' : 'Add Prohibited Item'}
             </h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">Pattern *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Pattern *</label>
                 <input
                   type="text"
                   value={formData.pattern}
                   onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 border rounded-md"
                   placeholder="e.g., weapon, drugs, scam"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">Type *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Type *</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 border rounded-md"
                 >
                   <option value="keyword">Keyword</option>
                   <option value="phrase">Phrase</option>
@@ -372,11 +372,11 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">Severity *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Severity *</label>
                 <select
                   value={formData.severity}
                   onChange={(e) => setFormData({ ...formData, severity: e.target.value as any })}
-                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 border rounded-md"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -386,12 +386,12 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">Category *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Category *</label>
                 <input
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 border rounded-md"
                   placeholder="e.g., Weapons, Drugs, Scams"
                   list="categories"
                 />
@@ -403,11 +403,11 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-200">Description</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 border rounded-md"
                   rows={2}
                   placeholder="Optional description..."
                 />
@@ -426,7 +426,7 @@ export default function ProhibitedItemsPage() {
                   setShowAddModal(false)
                   setEditingItem(null)
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -437,3 +437,4 @@ export default function ProhibitedItemsPage() {
     </div>
   )
 }
+

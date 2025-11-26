@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { redirect } from "next/navigation"
+import Link from "next/link"
 import { sb } from "@/lib/supabase/browser"
 import ListingCard from "@/components/ListingCard"
 import VerifiedBadge from "@/components/VerifiedBadge"
@@ -187,7 +187,7 @@ export default function ProfilePage() {
   const name = profile.name || email.split("@")[0]
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="max-w-6xl w-full mx-auto space-y-8 p-4 sm:p-6">
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -312,25 +312,26 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Profile Card - Made wider to fit long usernames */}
         <div className="lg:col-span-1">
-          <div className="bg-[var(--card-bg)] rounded-xl border border-border p-6 space-y-4">
+          <div className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] backdrop-blur space-y-4 min-w-[320px] lg:mr-auto">
             {/* Avatar */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center text-center">
               {profile.avatarUrl ? (
                 <img 
                   src={profile.avatarUrl} 
                   alt={name}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-primary"
+                  className="h-24 w-24 rounded-3xl object-cover border-4 border-white shadow-[0_15px_35px_rgba(15,23,42,0.15)]"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-3xl font-bold text-primary">
+                <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-indigo-500/70 to-purple-500/70 flex items-center justify-center text-3xl font-black text-white shadow-[0_15px_35px_rgba(99,102,241,0.45)]">
                   {name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <h2 className="mt-3 text-xl font-semibold">{name}</h2>
-              <p className="text-sm text-foreground-secondary">@{email.split("@")[0]}</p>
+              {/* Username size reduced & long names wrapped for better readability */}
+              <h2 className="mt-4 text-xl font-bold break-all leading-snug text-slate-900">{name}</h2>
+              <p className="text-sm font-medium text-slate-500">@{email.split("@")[0]}</p>
               
               {/* Verification Badges */}
               <div className="flex gap-2 mt-2">
@@ -340,74 +341,76 @@ export default function ProfilePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex justify-center gap-8 py-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{listings.length}</div>
-                <div className="text-sm text-foreground-secondary">Listings</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{listings.filter(l => l.isSold).length}</div>
-                <div className="text-sm text-foreground-secondary">Sold</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{profile.totalTransactions || 0}</div>
-                <div className="text-sm text-foreground-secondary">Deals</div>
-              </div>
+            <div className="grid grid-cols-3 gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+              {[{
+                label: 'Listings', value: listings.length
+              }, {
+                label: 'Sold', value: listings.filter(l => l.isSold).length
+              }, {
+                label: 'Deals', value: profile.totalTransactions || 0
+              }].map((stat) => (
+                <div className="text-center" key={stat.label}>
+                  <div className="text-2xl font-black text-slate-900">{stat.value}</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{stat.label}</div>
+                </div>
+              ))}
             </div>
 
             {/* Rating Display */}
             {profile.totalRatings > 0 && (
-              <div className="py-3 border-t border-b border-border">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="flex">
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-4 py-3">
+                <div className="flex items-center justify-center gap-3 text-amber-900">
+                  <div className="flex text-lg">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className={star <= Math.round(profile.averageRating) ? 'text-yellow-400' : 'text-gray-400'}>
+                      <span key={star} className={star <= Math.round(profile.averageRating) ? 'text-yellow-400' : 'text-yellow-200'}>
                         ⭐
                       </span>
                     ))}
                   </div>
-                  <span className="font-bold">{profile.averageRating.toFixed(1)}</span>
-                  <span className="text-sm text-foreground-secondary">({profile.totalRatings} {profile.totalRatings === 1 ? 'rating' : 'ratings'})</span>
+                  <span className="text-2xl font-black">{profile.averageRating.toFixed(1)}</span>
+                  <span className="text-sm font-semibold">
+                    ({profile.totalRatings} {profile.totalRatings === 1 ? 'rating' : 'ratings'})
+                  </span>
                 </div>
               </div>
             )}
 
             {/* Buttons */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="w-full py-2 border border-border rounded-lg hover:bg-[var(--background-elevated)] hover:border-primary transition-all"
+                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
               >
                 Edit Profile
               </button>
               <form action="/auth/signout" method="post">
-                <button className="w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-hover">
+                <button className="w-full rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(15,23,42,0.35)]">
                   Logout
                 </button>
               </form>
             </div>
 
             {/* Additional Info */}
-            <div className="pt-4 border-t border-border space-y-2 text-sm">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 space-y-3 text-sm">
               {profile.phone && (
                 <div className="flex justify-between items-center">
-                  <span className="text-foreground-secondary">Phone</span>
+                  <span className="text-slate-500">Phone</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{profile.phone}</span>
+                    <span className="font-semibold text-slate-900">{profile.phone}</span>
                     {profile.phoneVerified && (
-                      <span className="text-xs text-success">✓</span>
+                      <span className="text-xs text-success">Verified</span>
                     )}
                   </div>
                 </div>
               )}
               {!profile.phoneVerified && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+                  <p className="text-xs text-amber-900 mb-2 font-semibold">
                     📱 Verify your phone number to build trust with other users
                   </p>
                   <a 
                     href="/verify-phone"
-                    className="text-xs font-medium text-primary hover:underline"
+                    className="text-xs font-semibold text-primary hover:underline"
                   >
                     Verify Phone Number →
                   </a>
@@ -415,20 +418,20 @@ export default function ProfilePage() {
               )}
               {profile.campusArea && (
                 <div className="flex justify-between">
-                  <span className="text-foreground-secondary">Campus Area</span>
-                  <span className="font-medium">{profile.campusArea}</span>
+                  <span className="text-slate-500">Campus Area</span>
+                  <span className="font-semibold text-slate-900">{profile.campusArea}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-foreground-secondary">Member Since</span>
-                <span className="font-medium">
+                <span className="text-slate-500">Member Since</span>
+                <span className="font-semibold text-slate-900">
                   {new Date(profile.createdAt).getFullYear()}
                 </span>
               </div>
               {profile.bio && (
-                <div className="pt-2">
-                  <span className="text-foreground-secondary block mb-1">Bio</span>
-                  <p className="text-sm">{profile.bio}</p>
+                <div className="pt-1">
+                  <span className="text-slate-500 block mb-1">Bio</span>
+                  <p className="text-sm text-slate-900">{profile.bio}</p>
                 </div>
               )}
             </div>
@@ -436,22 +439,37 @@ export default function ProfilePage() {
         </div>
 
         {/* My Listings */}
-        <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold mb-4">My Listings</h2>
-          {listings.length === 0 ? (
-            <div className="text-center py-12 text-foreground-secondary bg-[var(--card-bg)] rounded-xl border border-border">
-              <p>You haven't created any listings yet.</p>
-              <a href="/listings/new" className="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition">
-                Create Your First Listing
+        <div className="lg:col-span-2 lg:pl-6">
+          <div className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">inventory</p>
+                <h2 className="text-3xl font-black text-slate-900">My Listings</h2>
+                <p className="text-sm text-slate-500">Showcase your items and track sales in one view.</p>
+              </div>
+              <a
+                href="/listings/new"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+              >
+                + New Listing
               </a>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          )}
+            {listings.length === 0 ? (
+              <div className="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center text-slate-500">
+                <p className="text-lg font-semibold text-slate-900">No listings yet</p>
+                <p className="text-sm">Launch your first listing to reach other Beacons.</p>
+                <a href="/listings/new" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(99,102,241,0.35)]">
+                  Create Your First Listing
+                </a>
+              </div>
+            ) : (
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

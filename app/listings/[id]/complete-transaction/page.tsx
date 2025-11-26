@@ -227,8 +227,8 @@ export default function CompleteTransactionPage({ params }: PageProps) {
           )}
 
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm">
-            <p className="font-medium text-amber-600 dark:text-amber-400 mb-2">📋 Next Steps:</p>
-            <ol className="list-decimal list-inside space-y-1 text-foreground-secondary">
+            <p className="font-medium text-amber-900 dark:text-amber-200 mb-2">📋 Next Steps:</p>
+            <ol className="list-decimal list-inside space-y-1 text-gray-700 dark:text-gray-300">
               <li>You confirm the transaction</li>
               <li>Seller confirms the transaction</li>
               <li>Both parties rate each other</li>

@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sbServer } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/admin-middleware'
 
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest) {
   try {
     const authResult = await requireAdmin(req)

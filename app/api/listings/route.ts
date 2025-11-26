@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sbServer } from "@/lib/supabase/server"
 import { requireAuth } from "@/lib/auth-middleware"
-import { validateRequest, createListingSchema } from "@/lib/validation-schemas"
+import { validateRequest, createListingSchema, type CreateListingInput } from "@/lib/validation-schemas"
 import { rateLimit, RateLimits, getRateLimitIdentifier } from "@/lib/rate-limit"
 import { moderateText, calculateSpamScore, shouldAutoReject, shouldFlagForReview } from "@/lib/moderation"
 import { detectNSFW } from "@/lib/nsfw-detection"
+import { withDerivedProFlag } from "@/lib/utils/pro"
 
 // CREATE a listing
 export async function POST(req: NextRequest) {
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    const { title, description, priceCents, condition, categoryId, imageUrl, campus } = validation.data
+  const payload = validation.data as CreateListingInput
+    const { title, description, priceCents, condition, categoryId, imageUrl, campus, paymentMethods } = payload
 
     // 🛡️ CONTENT MODERATION
     console.log('🛡️ Running content moderation...');
@@ -142,9 +144,25 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString()
+    // Ensure seller has the selected payment methods active
+    const { data: sellerPaymentMethods } = await supabase
+      .from('PaymentMethod')
+      .select('methodType, isActive')
+      .eq('userId', user.id)
+      .eq('isActive', true)
+
+  const availableMethods = new Set((sellerPaymentMethods || []).map((pm: any) => pm.methodType))
+  const invalidSelections = paymentMethods.filter(method => !availableMethods.has(method))
+
+    if (invalidSelections.length > 0) {
+      return NextResponse.json({
+        error: `Some payment methods are not active on your account: ${invalidSelections.join(', ')}`,
+      }, { status: 400 })
+    }
+
     const { data: listing, error } = await supabase
       .from('Listing')
-      .insert({
+  .insert({
         title,
         description,
         priceCents,
@@ -159,13 +177,30 @@ export async function POST(req: NextRequest) {
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
       `)
       .single()
 
     if (error || !listing) {
       console.error("Failed to create listing:", error)
       return NextResponse.json({ error: "Failed to create listing" }, { status: 500 })
+    }
+
+    if (paymentMethods.length > 0) {
+      const { error: paymentOptionError } = await supabase
+        .from('ListingPaymentOption')
+        .insert(
+          paymentMethods.map(methodType => ({
+            listingId: listing.id,
+            paymentMethodType: methodType,
+          }))
+        )
+
+      if (paymentOptionError) {
+        console.error('Failed to attach payment methods to listing:', paymentOptionError)
+        await supabase.from('Listing').delete().eq('id', listing.id)
+        return NextResponse.json({ error: "Failed to save payment options. Please try again." }, { status: 500 })
+      }
     }
 
     // 🚩 Create FlaggedContent entry if needed
@@ -211,7 +246,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ data: listing }, { status: 201 })
+    return NextResponse.json({
+      data: {
+        ...listing,
+        seller: withDerivedProFlag(listing.seller),
+        paymentOptions: paymentMethods,
+      }
+    }, { status: 201 })
   } catch (err: any) {
     console.error("POST /api/listings failed:", err)
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 })
@@ -241,7 +282,8 @@ export async function GET(req: NextRequest) {
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
+        paymentOptions:ListingPaymentOption(paymentMethodType)
       `, { count: 'exact' })
 
     // Search filter
@@ -270,6 +312,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { data: items, error, count } = await query
+      .order('boostedUntil', { ascending: false, nullsFirst: false })
       .order('createdAt', { ascending: false })
       .range(skip, skip + limit - 1)
 
@@ -280,8 +323,16 @@ export async function GET(req: NextRequest) {
 
     const total = count ?? 0
 
+    const normalizedItems = (items || []).map((item: any) => ({
+      ...item,
+      seller: withDerivedProFlag(item.seller),
+      paymentOptions: Array.isArray(item.paymentOptions)
+        ? item.paymentOptions.map((opt: any) => opt.paymentMethodType)
+        : [],
+    }))
+
     return NextResponse.json({
-      data: items || [],
+      data: normalizedItems,
       page,
       limit,
       total,

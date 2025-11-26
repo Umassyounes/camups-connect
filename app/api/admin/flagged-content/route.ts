@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sbServer } from '@/lib/supabase/server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-middleware'
 
+export const runtime = 'nodejs'
+
 // GET /api/admin/flagged-content - List flagged content with filters
 export async function GET(req: NextRequest) {
   try {

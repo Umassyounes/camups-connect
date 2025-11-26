@@ -9,6 +9,8 @@ import { sbServer } from '@/lib/supabase/server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-middleware'
 import { z } from 'zod'
 
+export const runtime = 'nodejs'
+
 // Validation schema
 const prohibitedItemSchema = z.object({
   type: z.enum(['keyword', 'regex', 'category', 'url_pattern']),

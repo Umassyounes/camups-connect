@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sbServer } from "@/lib/supabase/server"
 import { requireAuth } from "@/lib/auth-middleware"
 import { validateRequest, createEventSchema } from "@/lib/validation-schemas"
+import { isEventCurrentlySponsored } from "@/lib/types/events"
 import { rateLimit, RateLimits, getRateLimitIdentifier } from "@/lib/rate-limit"
 
 // GET /api/events - List all events
@@ -12,9 +13,10 @@ export async function GET(req: NextRequest) {
     const rateLimitResponse = rateLimit(rateLimitIdentifier, RateLimits.LENIENT)
     if (rateLimitResponse) return rateLimitResponse
 
-    const { searchParams } = new URL(req.url)
-    const category = searchParams.get("category")
-    const upcoming = searchParams.get("upcoming") === "true"
+  const { searchParams } = new URL(req.url)
+  const category = searchParams.get("category")
+  const upcoming = searchParams.get("upcoming") === "true"
+  const sponsoredOnly = searchParams.get("sponsoredOnly") === "true"
     
     const supabase = await sbServer()
     let query = supabase
@@ -22,8 +24,11 @@ export async function GET(req: NextRequest) {
       .select(`
         *,
         organizer:Profile!Event_organizerId_fkey(id, name, avatarUrl),
-        attendees:EventAttendee(userId)
+        attendees:EventAttendee(userId),
+        sponsoredSlot:SponsoredEventSlot(*)
       `)
+      .order('isSponsored', { ascending: false })
+      .order('sponsoredPriority', { ascending: false, nullsFirst: false })
       .order('eventDate', { ascending: true })
       .limit(100)
     
@@ -35,20 +40,42 @@ export async function GET(req: NextRequest) {
       query = query.gte('eventDate', new Date().toISOString())
     }
     
-    const { data: events, error } = await query
+  const { data: events, error } = await query
     
     if (error) {
       console.error("GET /api/events error:", error)
       return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })
     }
     
-    // Add attendee count to each event
-    const eventsWithCount = (events || []).map((event: any) => ({
-      ...event,
-      attendeeCount: event.attendees?.length || 0
-    }))
+    const eventsWithCount = (events || []).map((event: any) => {
+      const activeSponsored = isEventCurrentlySponsored({
+        isSponsored: event.isSponsored,
+        sponsoredUntil: event.sponsoredUntil,
+      })
+
+      return {
+        ...event,
+        attendeeCount: event.attendees?.length || 0,
+        isSponsored: activeSponsored,
+        sponsoredPriority: activeSponsored ? event.sponsoredPriority : null,
+        sponsoredSlot: event.sponsoredSlot ?? null,
+      }
+    })
+
+    const filtered = sponsoredOnly
+      ? eventsWithCount.filter((event: any) => event.isSponsored)
+      : eventsWithCount
+
+  const sorted = [...filtered].sort((a: any, b: any) => {
+      if (a.isSponsored && !b.isSponsored) return -1
+      if (!a.isSponsored && b.isSponsored) return 1
+      const aPriority = a.sponsoredPriority ?? 0
+      const bPriority = b.sponsoredPriority ?? 0
+      if (aPriority !== bPriority) return bPriority - aPriority
+      return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+    })
     
-    return NextResponse.json({ data: eventsWithCount })
+    return NextResponse.json({ data: sorted })
   } catch (error) {
     console.error("GET /api/events error:", error)
     return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })

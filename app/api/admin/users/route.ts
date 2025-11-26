@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sbServer } from '@/lib/supabase/server';
 import { requireFullAdmin } from '@/lib/admin-middleware';
 
+export const runtime = 'nodejs';
+
 const MAX_LIMIT = 100;
 
 export async function GET(req: NextRequest) {

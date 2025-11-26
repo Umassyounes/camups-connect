@@ -3,6 +3,7 @@ import { sbServer } from "@/lib/supabase/server"
 import { requireAuth } from "@/lib/auth-middleware"
 import { validateRequest, updateProfileSchema } from "@/lib/validation-schemas"
 import { rateLimit, RateLimits, getRateLimitIdentifier } from "@/lib/rate-limit"
+import { withDerivedProFlag } from "@/lib/utils/pro"
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ data: profile })
+  return NextResponse.json({ data: withDerivedProFlag(profile) })
   } catch (error) {
     console.error("Error fetching profile:", error)
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
@@ -78,7 +79,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
     }
 
-    return NextResponse.json({ data: profile })
+  return NextResponse.json({ data: withDerivedProFlag(profile) })
   } catch (error) {
     console.error("Error updating profile:", error)
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })

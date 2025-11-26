@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import SearchBar from "@/components/SearchBar"
+import BannerAdSlot from "@/components/BannerAdSlot"
 
 type Event = {
   id: number
@@ -16,6 +17,19 @@ type Event = {
   attendeeCount: number
   isExternal: boolean
   externalSource: string | null
+  isSponsored: boolean
+  sponsoredBadge: string | null
+  sponsoredPriority: number | null
+  sponsoredUntil: string | null
+  sponsoredSlot?: {
+    id: number
+    status: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
+    tier: string
+    sponsorName: string
+    promoUrl: string | null
+    startsAt: string
+    endsAt: string
+  } | null
   organizer: {
     id: number
     name: string | null
@@ -27,6 +41,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "upcoming">("upcoming")
   const [sourceFilter, setSourceFilter] = useState<"all" | "community" | "official">("all")
+  const [sponsoredFilter, setSponsoredFilter] = useState<"all" | "sponsored" | "standard">("all")
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
 
@@ -48,12 +63,21 @@ export default function EventsPage() {
   }
 
   // Filter events by source
-  const filteredEvents = events.filter(event => {
-    if (sourceFilter === "all") return true
-    if (sourceFilter === "official") return event.isExternal
-    if (sourceFilter === "community") return !event.isExternal
-    return true
-  })
+  const filteredEvents = events
+    .filter(event => {
+      if (sourceFilter === "all") return true
+      if (sourceFilter === "official") return event.isExternal
+      if (sourceFilter === "community") return !event.isExternal
+      return true
+    })
+    .filter(event => {
+      if (sponsoredFilter === "all") return true
+      if (sponsoredFilter === "sponsored") return event.isSponsored
+      return !event.isSponsored
+    })
+
+  const sponsoredEvents = filteredEvents.filter(event => event.isSponsored)
+  const organicEvents = filteredEvents.filter(event => !event.isSponsored)
 
   async function fetchEvents() {
     try {
@@ -94,6 +118,155 @@ export default function EventsPage() {
     return `${hour12}:${minutes} ${ampm}`
   }
 
+  function renderEventCard(event: Event) {
+    const isOrganizer = event.organizer.id === currentUserId
+    const cardClasses = event.isSponsored
+      ? "border-2 border-amber-400/60 shadow-[0_10px_35px_rgba(251,191,36,0.25)]"
+      : "border border-border shadow-subtle"
+
+    return (
+      <div key={event.id} className="relative group">
+        <Link
+          href={`/events/${event.id}`}
+          className={`block rounded-xl ${cardClasses} bg-[var(--card-bg)] overflow-hidden hover:shadow-float transition`}
+        >
+          {/* Event Image */}
+          <div className="aspect-video bg-gradient-to-br from-[rgba(129,140,248,0.35)] via-[rgba(14,21,33,0.65)] to-[rgba(14,116,144,0.4)] relative overflow-hidden">
+            {event.imageUrl ? (
+              <img
+                src={event.imageUrl}
+                alt={event.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white text-6xl">
+                {event.isExternal ? '🏛️' : '📅'}
+              </div>
+            )}
+            <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+              {event.isSponsored && (
+                <span className="bg-amber-500 text-gray-900 px-3 py-1 rounded-full text-xs font-bold shadow-subtle">
+                  {event.sponsoredBadge || 'Sponsored'}
+                </span>
+              )}
+            </div>
+            <div className="absolute top-2 right-2 flex gap-2">
+              {event.isExternal && (
+                <span className="bg-success text-white px-3 py-1 rounded-full text-xs font-bold shadow-subtle">
+                  🏛️ Official UMass
+                </span>
+              )}
+              {event.category && !event.isExternal && (
+                <span className="bg-[rgba(17,26,45,0.88)] backdrop-blur px-3 py-1 rounded-full text-xs font-medium text-foreground">
+                  {event.category}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Event Info */}
+          <div className="p-4 space-y-2">
+            <h3 className="font-bold text-lg line-clamp-2 text-foreground group-hover:text-primary transition">
+              {event.title}
+            </h3>
+
+            <p className="text-sm text-foreground-secondary line-clamp-2">
+              {event.description}
+            </p>
+
+            <div className="space-y-1 text-sm pt-2">
+              <div className="flex items-center gap-2 text-foreground-secondary">
+                <span>📅</span>
+                <span>{formatDate(event.eventDate)}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-foreground-secondary">
+                <span>🕐</span>
+                <span>
+                  {formatTime(event.startTime)}
+                  {event.endTime && ` - ${formatTime(event.endTime)}`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-foreground-secondary">
+                <span>📍</span>
+                <span className="line-clamp-1">{event.location}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-foreground-secondary pt-1">
+                <span>👥</span>
+                <span>{event.attendeeCount} attending</span>
+              </div>
+
+              {event.isSponsored && event.sponsoredUntil && (
+                <div className="flex items-center gap-2 text-xs text-amber-600">
+                  <span>✨</span>
+                  <span>Featured through {formatDate(event.sponsoredUntil)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-border text-xs text-foreground-secondary">
+              {event.isExternal ? (
+                <div className="flex items-center justify-between">
+                  <span>Official UMass Boston Event</span>
+                  {event.externalSource && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (event.externalSource) {
+                          window.open(event.externalSource, '_blank', 'noopener,noreferrer')
+                        }
+                      }}
+                      className="text-primary hover:underline cursor-pointer bg-transparent border-none p-0"
+                    >
+                      View Details →
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <span>Organized by {event.organizer.name || "Anonymous"}</span>
+              )}
+            </div>
+
+            {event.isSponsored && event.sponsoredSlot && (
+              <div className="mt-3 rounded-lg border border-amber-400/40 bg-[rgba(251,191,36,0.12)] p-3 text-xs text-amber-800 flex flex-col gap-1">
+                <span className="font-semibold">Sponsored by {event.sponsoredSlot.sponsorName}</span>
+                {event.sponsoredSlot.promoUrl && (
+                  <button
+                    className="text-amber-900 underline text-left"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const promoUrl = event.sponsoredSlot?.promoUrl
+                      if (promoUrl) {
+                        window.open(promoUrl, '_blank', 'noopener,noreferrer')
+                      }
+                    }}
+                  >
+                    Visit partner site →
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </Link>
+
+        {isOrganizer && !event.isExternal && (
+          <button
+            onClick={(e) => handleDeleteEvent(event.id, event.title, e)}
+            disabled={deletingEventId === event.id}
+            className="absolute top-2 left-2 bg-error text-white px-3 py-1 rounded-lg text-xs font-medium shadow-subtle opacity-0 group-hover:opacity-100 transition hover:opacity-90 disabled:opacity-50 z-10"
+            title="Delete event"
+          >
+            {deletingEventId === event.id ? "Deleting..." : "🗑️ Delete"}
+          </button>
+        )}
+      </div>
+    )
+  }
+
   async function handleDeleteEvent(eventId: number, eventTitle: string, e: React.MouseEvent) {
     e.preventDefault() // Prevent navigation to event detail page
     e.stopPropagation()
@@ -131,20 +304,12 @@ export default function EventsPage() {
             <h1 className="text-3xl font-bold text-foreground">UMass Boston Events</h1>
             <p className="mt-1 text-foreground-secondary">Discover and join campus events</p>
           </div>
-          <div className="flex gap-2">
-            <Link
-              href="/events/sync"
-              className="rounded-lg bg-secondary px-4 py-2 text-white shadow-subtle hover:opacity-90 transition"
-            >
-              🔄 Sync UMB Events
-            </Link>
-            <Link
-              href="/events/new"
-              className="rounded-lg bg-primary px-4 py-2 text-white shadow-subtle hover:bg-primary-hover transition"
-            >
-              ➕ Create Event
-            </Link>
-          </div>
+          <Link
+            href="/events/new"
+            className="rounded-lg bg-primary px-4 py-2 text-white shadow-subtle hover:bg-primary-hover transition"
+          >
+            ➕ Create Event
+          </Link>
         </div>
         
         {/* Search Bar */}
@@ -153,63 +318,39 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 space-y-3">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilter("upcoming")}
-            className={`px-4 py-2 rounded-lg transition ${
-              filter === "upcoming"
-                ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-                : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-            }`}
-          >
-            Upcoming Events
-          </button>
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg transition ${
-              filter === "all"
-                ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-                : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-            }`}
-          >
-            All Events
-          </button>
-        </div>
+      {/* Filters - Simplified to 2 main filters */}
+      <div className="mb-6 flex gap-3">
+        <button
+          onClick={() => setFilter("upcoming")}
+          className={`px-4 py-2 rounded-lg transition ${
+            filter === "upcoming"
+              ? "border border-primary bg-primary/15 text-primary shadow-subtle"
+              : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
+          }`}
+        >
+          � Upcoming Events
+        </button>
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-4 py-2 rounded-lg transition ${
+            filter === "all"
+              ? "border border-primary bg-primary/15 text-primary shadow-subtle"
+              : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
+          }`}
+        >
+          🗓️ All Events
+        </button>
+      </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setSourceFilter("all")}
-            className={`px-4 py-2 rounded-lg transition text-sm ${
-              sourceFilter === "all"
-                ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-                : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-            }`}
-          >
-            All Sources
-          </button>
-          <button
-            onClick={() => setSourceFilter("official")}
-            className={`px-4 py-2 rounded-lg transition text-sm ${
-              sourceFilter === "official"
-                ? "border border-success bg-success/15 text-success shadow-subtle"
-                : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-            }`}
-          >
-            🏛️ Official UMass
-          </button>
-          <button
-            onClick={() => setSourceFilter("community")}
-            className={`px-4 py-2 rounded-lg transition text-sm ${
-              sourceFilter === "community"
-                ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-                : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-            }`}
-          >
-            👥 Community Events
-          </button>
-        </div>
+      <div className="mb-8">
+        <BannerAdSlot
+          headline="Promote your club or shop"
+          body="Reserve a sponsored event slot for as low as $5 and reach thousands of weekly event views."
+          sponsor="Sponsored spotlight"
+          ctaLabel="Request a slot"
+          href="/events"
+          price="$5–$10 per event"
+        />
       </div>
 
       {/* Events Grid */}
@@ -227,116 +368,34 @@ export default function EventsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => {
-            const isOrganizer = event.organizer.id === currentUserId
-            return (
-            <div key={event.id} className="relative group">
-              <Link
-                href={`/events/${event.id}`}
-                className="block rounded-xl border border-border bg-[var(--card-bg)] overflow-hidden hover:shadow-float transition"
-              >
-              {/* Event Image */}
-              <div className="aspect-video bg-gradient-to-br from-[rgba(129,140,248,0.35)] via-[rgba(14,21,33,0.65)] to-[rgba(14,116,144,0.4)] relative overflow-hidden">
-                {event.imageUrl ? (
-                  <img
-                    src={event.imageUrl}
-                    alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-6xl">
-                    {event.isExternal ? '🏛️' : '📅'}
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 flex gap-2">
-                  {event.isExternal && (
-                    <span className="bg-success text-white px-3 py-1 rounded-full text-xs font-bold shadow-subtle">
-                      🏛️ Official UMass
-                    </span>
-                  )}
-                  {event.category && !event.isExternal && (
-                    <span className="bg-[rgba(17,26,45,0.88)] backdrop-blur px-3 py-1 rounded-full text-xs font-medium text-foreground">
-                      {event.category}
-                    </span>
-                  )}
+        <div className="space-y-8">
+          {sponsoredEvents.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-2xl font-semibold text-foreground">Sponsored spotlights</h2>
+                  <p className="text-sm text-foreground-secondary">Clubs and local partners promoting upcoming moments.</p>
                 </div>
+                <Link href="/events/new" className="text-primary text-sm hover:underline">
+                  Promote your event →
+                </Link>
               </div>
-
-              {/* Event Info */}
-                <div className="p-4 space-y-2">
-                <h3 className="font-bold text-lg line-clamp-2 text-foreground group-hover:text-primary transition">
-                  {event.title}
-                </h3>
-                
-                <p className="text-sm text-foreground-secondary line-clamp-2">
-                  {event.description}
-                </p>
-
-                <div className="space-y-1 text-sm pt-2">
-                  <div className="flex items-center gap-2 text-foreground-secondary">
-                    <span>📅</span>
-                    <span>{formatDate(event.eventDate)}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-foreground-secondary">
-                    <span>🕐</span>
-                    <span>
-                      {formatTime(event.startTime)}
-                      {event.endTime && ` - ${formatTime(event.endTime)}`}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-foreground-secondary">
-                    <span>📍</span>
-                    <span className="line-clamp-1">{event.location}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-foreground-secondary pt-1">
-                    <span>👥</span>
-                    <span>{event.attendeeCount} attending</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-border text-xs text-foreground-secondary">
-                  {event.isExternal ? (
-                    <div className="flex items-center justify-between">
-                      <span>Official UMass Boston Event</span>
-                      {event.externalSource && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (event.externalSource) {
-                              window.open(event.externalSource, '_blank', 'noopener,noreferrer');
-                            }
-                          }}
-                          className="text-primary hover:underline cursor-pointer bg-transparent border-none p-0"
-                        >
-                          View Details →
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <span>Organized by {event.organizer.name || "Anonymous"}</span>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sponsoredEvents.map(renderEventCard)}
               </div>
-            </Link>
-            
-            {/* Delete Button (for organizers only, shows on hover) */}
-            {isOrganizer && !event.isExternal && (
-              <button
-                onClick={(e) => handleDeleteEvent(event.id, event.title, e)}
-                disabled={deletingEventId === event.id}
-                className="absolute top-2 left-2 bg-error text-white px-3 py-1 rounded-lg text-xs font-medium shadow-subtle opacity-0 group-hover:opacity-100 transition hover:opacity-90 disabled:opacity-50 z-10"
-                title="Delete event"
-              >
-                {deletingEventId === event.id ? "Deleting..." : "🗑️ Delete"}
-              </button>
-            )}
-          </div>
-          )})}
+            </section>
+          )}
+
+          {organicEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {organicEvents.map(renderEventCard)}
+            </div>
+          ) : (
+            <div className="text-center py-10 rounded-xl border border-dashed border-border text-foreground-secondary">
+              <p className="text-foreground">Only sponsored events match this view right now.</p>
+              <p className="text-sm mt-2">Adjust filters to see more campus events.</p>
+            </div>
+          )}
         </div>
       )}
     </div>
