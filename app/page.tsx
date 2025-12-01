@@ -122,21 +122,13 @@ export default async function Marketplace({
 
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-3xl font-bold text-[#1A202C] mb-2">
-              {proOnly ? '✨ Pro Members' : 'Premium Marketplace'}
-            </h2>
-            <p className="text-[#718096]">
-              {proOnly ? 'Exclusive listings from verified Pro sellers' : 'Verified listings from trusted students'}
-            </p>
-          </div>
-          <a href="/listings/all" className="text-[#4F7CFF] font-medium hover:underline flex items-center gap-2">
-            View All
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
-            </svg>
-          </a>
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-[#1A202C] mb-2">
+            {proOnly ? '✨ Pro Members' : 'Premium Marketplace'}
+          </h2>
+          <p className="text-[#718096]">
+            {proOnly ? 'Exclusive listings from verified Pro sellers' : 'Verified listings from trusted students'}
+          </p>
         </div>
 
         {/* Sponsor Banner - Coming Soon */}
