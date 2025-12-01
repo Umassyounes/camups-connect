@@ -1,5 +1,6 @@
-'use client'
-import { useState, useRef } from 'react'
+"use client"
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 
 const MAX_IMAGES = 5
 
@@ -74,6 +75,7 @@ export default function ListingForm({ categories }: { categories: { id: number; 
       const parsedPrice = typeof priceValue === 'string' ? Number.parseFloat(priceValue) : NaN
       if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
         alert('Please enter a valid, non-negative price')
+        setLoading(false)
         return
       }
 
@@ -149,7 +151,7 @@ export default function ListingForm({ categories }: { categories: { id: number; 
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-  <input name="title" placeholder="Title" required className="w-full rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground placeholder:text-muted-foreground focus:border-primary" />
+      <input name="title" placeholder="Title" required className="w-full rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground placeholder:text-muted-foreground focus:border-primary" />
       <div>
         <textarea 
           name="description" 
@@ -176,11 +178,11 @@ export default function ListingForm({ categories }: { categories: { id: number; 
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-  <select name="categoryId" className="rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground focus:border-primary" required>
+        <select name="categoryId" className="rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground focus:border-primary" required>
           <option value="">Select Category</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-  <input name="campus" placeholder="Campus/Location (optional)" className="rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground placeholder:text-muted-foreground focus:border-primary" />
+        <input name="campus" placeholder="Campus/Location (optional)" className="rounded-xl border border-border bg-[var(--input-bg)] p-3 text-foreground placeholder:text-muted-foreground focus:border-primary" />
       </div>
 
       {/* Image Upload */}
@@ -251,7 +253,7 @@ export default function ListingForm({ categories }: { categories: { id: number; 
         )}
       </div>
 
-      <button disabled={loading} className="w-full rounded-xl bg-primary px-5 py-3 text-white shadow-subtle hover:bg-primary-hover disabled:opacity-50">
+      <button disabled={loading} className="w-full rounded-xl bg-red-600 px-5 py-3 text-white shadow-subtle hover:bg-red-700 disabled:opacity-50">
         {loading ? 'Creating…' : 'Create Listing'}
       </button>
     </form>

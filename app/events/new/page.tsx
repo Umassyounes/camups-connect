@@ -276,7 +276,7 @@ export default function NewEventPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white py-3 rounded-lg hover:bg-primary-hover disabled:opacity-50 font-medium transition shadow-subtle"
+            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition shadow-subtle"
           >
             {loading ? "Creating Event..." : "Create Event"}
           </button>

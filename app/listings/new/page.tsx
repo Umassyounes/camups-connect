@@ -13,8 +13,8 @@ export default async function NewListingPage() {
     .order('name', { ascending: true })
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="mb-4 text-2xl font-semibold">Post a listing</h1>
+    <div className="max-w-2xl mx-auto px-4">
+      <h1 className="mb-4 text-2xl font-semibold text-center">Post a listing</h1>
       <ListingForm categories={categories || []} />
     </div>
   )
