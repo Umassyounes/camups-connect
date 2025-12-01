@@ -34,6 +34,17 @@ export type Database = {
           isSuspended: boolean
           suspendedUntil: string | null
           suspensionReason: string | null
+          isPro: boolean
+          proStatus: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          proPlan: 'pro_monthly' | null
+          proActivatedAt: string | null
+          proRenewalDate: string | null
+          proCancelledAt: string | null
+          proAutoRenew: boolean
+          proHomepageEligible: boolean
+          proUnlimitedBoosts: boolean
+          proFeaturedCredits: number
+          proBoostCredits: number
         }
         Insert: {
           id?: number
@@ -54,6 +65,17 @@ export type Database = {
           isSuspended?: boolean
           suspendedUntil?: string | null
           suspensionReason?: string | null
+          isPro?: boolean
+          proStatus?: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          proPlan?: 'pro_monthly' | null
+          proActivatedAt?: string | null
+          proRenewalDate?: string | null
+          proCancelledAt?: string | null
+          proAutoRenew?: boolean
+          proHomepageEligible?: boolean
+          proUnlimitedBoosts?: boolean
+          proFeaturedCredits?: number
+          proBoostCredits?: number
         }
         Update: {
           id?: number
@@ -74,6 +96,17 @@ export type Database = {
           isSuspended?: boolean
           suspendedUntil?: string | null
           suspensionReason?: string | null
+          isPro?: boolean
+          proStatus?: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          proPlan?: 'pro_monthly' | null
+          proActivatedAt?: string | null
+          proRenewalDate?: string | null
+          proCancelledAt?: string | null
+          proAutoRenew?: boolean
+          proHomepageEligible?: boolean
+          proUnlimitedBoosts?: boolean
+          proFeaturedCredits?: number
+          proBoostCredits?: number
         }
       }
       Category: {
@@ -109,6 +142,8 @@ export type Database = {
           categoryId: number | null
           createdAt: string
           updatedAt: string
+          boostedUntil: string | null
+          boostedByPro: boolean
         }
         Insert: {
           id?: number
@@ -125,6 +160,8 @@ export type Database = {
           categoryId?: number | null
           createdAt?: string
           updatedAt?: string
+          boostedUntil?: string | null
+          boostedByPro?: boolean
         }
         Update: {
           id?: number
@@ -141,6 +178,8 @@ export type Database = {
           categoryId?: number | null
           createdAt?: string
           updatedAt?: string
+          boostedUntil?: string | null
+          boostedByPro?: boolean
         }
       }
       Conversation: {
@@ -216,6 +255,11 @@ export type Database = {
           organizerId: number
           isExternal: boolean
           externalSource: string | null
+          isSponsored: boolean
+          sponsoredSlotId: number | null
+          sponsoredBadge: string | null
+          sponsoredPriority: number | null
+          sponsoredUntil: string | null
           createdAt: string
           updatedAt: string
         }
@@ -233,6 +277,11 @@ export type Database = {
           organizerId: number
           isExternal?: boolean
           externalSource?: string | null
+          isSponsored?: boolean
+          sponsoredSlotId?: number | null
+          sponsoredBadge?: string | null
+          sponsoredPriority?: number | null
+          sponsoredUntil?: string | null
           createdAt?: string
           updatedAt?: string
         }
@@ -250,6 +299,11 @@ export type Database = {
           organizerId?: number
           isExternal?: boolean
           externalSource?: string | null
+          isSponsored?: boolean
+          sponsoredSlotId?: number | null
+          sponsoredBadge?: string | null
+          sponsoredPriority?: number | null
+          sponsoredUntil?: string | null
           createdAt?: string
           updatedAt?: string
         }
@@ -272,6 +326,62 @@ export type Database = {
           eventId?: number
           userId?: number
           createdAt?: string
+        }
+      }
+      SponsoredEventSlot: {
+        Row: {
+          id: number
+          eventId: number
+          sponsorUserId: number | null
+          sponsorName: string
+          contactEmail: string | null
+          contactPhone: string | null
+          promoUrl: string | null
+          priceCents: number
+          tier: string
+          status: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
+          startsAt: string
+          endsAt: string
+          approvedBy: number | null
+          notes: string | null
+          createdAt: string
+          updatedAt: string
+        }
+        Insert: {
+          id?: number
+          eventId: number
+          sponsorUserId?: number | null
+          sponsorName: string
+          contactEmail?: string | null
+          contactPhone?: string | null
+          promoUrl?: string | null
+          priceCents: number
+          tier: string
+          status?: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
+          startsAt: string
+          endsAt: string
+          approvedBy?: number | null
+          notes?: string | null
+          createdAt?: string
+          updatedAt?: string
+        }
+        Update: {
+          id?: number
+          eventId?: number
+          sponsorUserId?: number | null
+          sponsorName?: string
+          contactEmail?: string | null
+          contactPhone?: string | null
+          promoUrl?: string | null
+          priceCents?: number
+          tier?: string
+          status?: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
+          startsAt?: string
+          endsAt?: string
+          approvedBy?: number | null
+          notes?: string | null
+          createdAt?: string
+          updatedAt?: string
         }
       }
       ProhibitedItem: {
@@ -473,12 +583,340 @@ export type Database = {
           createdAt?: string
         }
       }
+      PaymentMethod: {
+        Row: {
+          id: number
+          userId: number
+          methodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          paymentHandle: string | null
+          displayName: string | null
+          isActive: boolean
+          isPreferred: boolean
+          notes: string | null
+          createdAt: string
+          updatedAt: string
+        }
+        Insert: {
+          id?: number
+          userId: number
+          methodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          paymentHandle?: string | null
+          displayName?: string | null
+          isActive?: boolean
+          isPreferred?: boolean
+          notes?: string | null
+          createdAt?: string
+          updatedAt?: string
+        }
+        Update: {
+          id?: number
+          userId?: number
+          methodType?: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          paymentHandle?: string | null
+          displayName?: string | null
+          isActive?: boolean
+          isPreferred?: boolean
+          notes?: string | null
+          createdAt?: string
+          updatedAt?: string
+        }
+      }
+      ListingPaymentOption: {
+        Row: {
+          id: number
+          listingId: number
+          paymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          createdAt: string
+        }
+        Insert: {
+          id?: number
+          listingId: number
+          paymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          createdAt?: string
+        }
+        Update: {
+          id?: number
+          listingId?: number
+          paymentMethodType?: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          createdAt?: string
+        }
+      }
+      PaymentTransaction: {
+        Row: {
+          id: number
+          listingId: number
+          buyerId: number
+          sellerId: number
+          paymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          amount: number
+          status: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          paymentSentAt: string | null
+          paymentConfirmedAt: string | null
+          completedAt: string | null
+          cancelledAt: string | null
+          buyerNotes: string | null
+          sellerNotes: string | null
+          disputeReason: string | null
+          disputedBy: number | null
+          disputedAt: string | null
+          meetingLocation: string | null
+          meetingTime: string | null
+          createdAt: string
+          updatedAt: string
+        }
+        Insert: {
+          id?: number
+          listingId: number
+          buyerId: number
+          sellerId: number
+          paymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          amount: number
+          status?: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          paymentSentAt?: string | null
+          paymentConfirmedAt?: string | null
+          completedAt?: string | null
+          cancelledAt?: string | null
+          buyerNotes?: string | null
+          sellerNotes?: string | null
+          disputeReason?: string | null
+          disputedBy?: number | null
+          disputedAt?: string | null
+          meetingLocation?: string | null
+          meetingTime?: string | null
+          createdAt?: string
+          updatedAt?: string
+        }
+        Update: {
+          id?: number
+          listingId?: number
+          buyerId?: number
+          sellerId?: number
+          paymentMethodType?: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          amount?: number
+          status?: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          paymentSentAt?: string | null
+          paymentConfirmedAt?: string | null
+          completedAt?: string | null
+          cancelledAt?: string | null
+          buyerNotes?: string | null
+          sellerNotes?: string | null
+          disputeReason?: string | null
+          disputedBy?: number | null
+          disputedAt?: string | null
+          meetingLocation?: string | null
+          meetingTime?: string | null
+          createdAt?: string
+          updatedAt?: string
+        }
+      }
+      PaymentTransactionHistory: {
+        Row: {
+          id: number
+          transactionId: number
+          statusFrom: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled' | null
+          statusTo: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          changedBy: number
+          notes: string | null
+          ipAddress: string | null
+          createdAt: string
+        }
+        Insert: {
+          id?: number
+          transactionId: number
+          statusFrom?: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled' | null
+          statusTo: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          changedBy: number
+          notes?: string | null
+          ipAddress?: string | null
+          createdAt?: string
+        }
+        Update: {
+          id?: number
+          transactionId?: number
+          statusFrom?: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled' | null
+          statusTo?: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          changedBy?: number
+          notes?: string | null
+          ipAddress?: string | null
+          createdAt?: string
+        }
+      }
+      ProSubscription: {
+        Row: {
+          id: number
+          userId: number
+          plan: 'pro_monthly'
+          status: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          provider: string
+          providerCustomerId: string | null
+          providerSubscriptionId: string | null
+          priceCents: number
+          currency: string
+          billingInterval: string
+          currentPeriodStart: string
+          currentPeriodEnd: string
+          cancelAtPeriodEnd: boolean
+          canceledAt: string | null
+          metadata: Json | null
+          createdAt: string
+          updatedAt: string
+        }
+        Insert: {
+          id?: number
+          userId: number
+          plan: 'pro_monthly'
+          status?: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          provider?: string
+          providerCustomerId?: string | null
+          providerSubscriptionId?: string | null
+          priceCents?: number
+          currency?: string
+          billingInterval?: string
+          currentPeriodStart: string
+          currentPeriodEnd: string
+          cancelAtPeriodEnd?: boolean
+          canceledAt?: string | null
+          metadata?: Json | null
+          createdAt?: string
+          updatedAt?: string
+        }
+        Update: {
+          id?: number
+          userId?: number
+          plan?: 'pro_monthly'
+          status?: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+          provider?: string
+          providerCustomerId?: string | null
+          providerSubscriptionId?: string | null
+          priceCents?: number
+          currency?: string
+          billingInterval?: string
+          currentPeriodStart?: string
+          currentPeriodEnd?: string
+          cancelAtPeriodEnd?: boolean
+          canceledAt?: string | null
+          metadata?: Json | null
+          createdAt?: string
+          updatedAt?: string
+        }
+      }
+      FeaturedListingSlot: {
+        Row: {
+          id: number
+          listingId: number
+          userId: number
+          slotType: string
+          startsAt: string
+          endsAt: string
+          createdAt: string
+          createdBySubscriptionId: number | null
+        }
+        Insert: {
+          id?: number
+          listingId: number
+          userId: number
+          slotType?: string
+          startsAt: string
+          endsAt: string
+          createdAt?: string
+          createdBySubscriptionId?: number | null
+        }
+        Update: {
+          id?: number
+          listingId?: number
+          userId?: number
+          slotType?: string
+          startsAt?: string
+          endsAt?: string
+          createdAt?: string
+          createdBySubscriptionId?: number | null
+        }
+      }
+      ListingBoost: {
+        Row: {
+          id: number
+          listingId: number
+          userId: number
+          priceCents: number
+          currency: string
+          source: string
+          status: string
+          startsAt: string
+          endsAt: string
+          createdAt: string
+          metadata: Json | null
+        }
+        Insert: {
+          id?: number
+          listingId: number
+          userId: number
+          priceCents?: number
+          currency?: string
+          source?: string
+          status?: string
+          startsAt: string
+          endsAt: string
+          createdAt?: string
+          metadata?: Json | null
+        }
+        Update: {
+          id?: number
+          listingId?: number
+          userId?: number
+          priceCents?: number
+          currency?: string
+          source?: string
+          status?: string
+          startsAt?: string
+          endsAt?: string
+          createdAt?: string
+          metadata?: Json | null
+        }
+      }
     }
-    Views: {}
+    Views: {
+      ActivePaymentTransactionsView: {
+        Row: {
+          id: number
+          listingId: number
+          buyerId: number
+          sellerId: number
+          paymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+          amount: number
+          status: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+          paymentSentAt: string | null
+          paymentConfirmedAt: string | null
+          completedAt: string | null
+          cancelledAt: string | null
+          buyerNotes: string | null
+          sellerNotes: string | null
+          disputeReason: string | null
+          disputedBy: number | null
+          disputedAt: string | null
+          meetingLocation: string | null
+          meetingTime: string | null
+          createdAt: string
+          updatedAt: string
+          listingTitle: string
+          listingPriceCents: number
+          listingImageUrl: string | null
+          listingImages: string[]
+          buyerName: string | null
+          buyerAvatar: string | null
+          sellerName: string | null
+          sellerAvatar: string | null
+        }
+      }
+    }
     Functions: {}
     Enums: {
       Condition: 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'POOR'
       MessageType: 'TEXT' | 'PHOTO' | 'VOICE'
+      PaymentMethodType: 'venmo' | 'cashapp' | 'zelle' | 'cash'
+      TransactionStatus: 'pending_payment' | 'payment_sent' | 'payment_confirmed' | 'completed' | 'disputed' | 'cancelled'
+      ProPlanType: 'pro_monthly'
+      ProSubscriptionStatus: 'none' | 'active' | 'grace' | 'past_due' | 'cancelled'
+      SponsoredEventStatus: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
     }
   }
 }

@@ -4,6 +4,9 @@ import { z } from "zod"
  * Zod schemas for API input validation
  */
 
+const paymentMethodEnum = z.enum(["venmo", "cashapp", "zelle", "cash"])
+const sponsoredEventTierEnum = z.enum(["spotlight", "featured", "community"])
+
 // Listing schemas
 export const createListingSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
@@ -13,11 +16,17 @@ export const createListingSchema = z.object({
   imageUrl: z.string().url().optional().nullable(),
   campus: z.string().max(100).optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),
+  paymentMethods: z
+    .array(paymentMethodEnum)
+    .min(1, "Select at least one payment method")
+    .max(4, "You can only select supported payment methods"),
 })
 
 export const updateListingSchema = createListingSchema.partial().extend({
   isSold: z.boolean().optional(),
 })
+
+export type CreateListingInput = z.infer<typeof createListingSchema>
 
 export const markListingAsSoldSchema = z.object({
   isSold: z.boolean(),
@@ -37,31 +46,21 @@ export const createEventSchema = z.object({
 
 export const updateEventSchema = createEventSchema.partial()
 
+export const sponsoredEventRequestSchema = z.object({
+  tier: sponsoredEventTierEnum,
+  sponsorName: z.string().min(2).max(120),
+  contactEmail: z.string().email("Valid email required"),
+  contactPhone: z.string().min(7).max(20).optional().nullable(),
+  promoUrl: z.string().url().optional().nullable(),
+  startsAt: z.string().datetime().optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+})
+
 // Message schemas
 export const createMessageSchema = z.object({
-  content: z.string().max(2000).optional().nullable(),
+  content: z.string().min(1).max(2000).optional(),
   messageType: z.enum(["TEXT", "PHOTO", "VOICE"]).default("TEXT"),
   mediaUrl: z.string().url().optional().nullable(),
-}).superRefine((data, ctx) => {
-  const trimmedContent = data.content?.trim()
-
-  if (data.messageType === "TEXT") {
-    if (!trimmedContent) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["content"],
-        message: "Text messages must include content",
-      })
-    }
-  } else {
-    if (!data.mediaUrl) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["mediaUrl"],
-        message: `${data.messageType === "PHOTO" ? "Photo" : "Voice"} messages require a media attachment`,
-      })
-    }
-  }
 })
 
 export const createConversationSchema = z.object({

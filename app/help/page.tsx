@@ -13,15 +13,15 @@ export default function HelpCenterPage() {
       questions: [
         {
           q: "How do I create an account?",
-          a: "Click the 'Sign Up' button in the top right corner. You can register using your university email address. Make sure to verify your email to unlock all features!"
+          a: "Click the 'Sign Up' button in the top right corner. You can register using your Google account or university email address through our authentication system. Make sure to verify your email to unlock all features!"
         },
         {
           q: "Is Campus Connect free to use?",
-          a: "Yes! Basic features are completely free. We also offer a Pro subscription with additional features like listing boosts, priority support, and ad-free browsing."
+          a: "Yes! Campus Connect is completely free to use. All features including listings, events, and messaging are available at no cost."
         },
         {
           q: "What universities are supported?",
-          a: "We currently support multiple universities and are constantly expanding. Check your university email domain to see if it's supported during registration."
+          a: "We currently support UMass Boston and are expanding to other universities. Check your university email domain to see if it's supported during registration."
         }
       ]
     },
@@ -30,19 +30,19 @@ export default function HelpCenterPage() {
       questions: [
         {
           q: "How do I list an item for sale?",
-          a: "Navigate to 'My Listings' and click 'Create New Listing'. Add photos, description, price, and category. Your listing will be visible to your campus community immediately!"
+          a: "Navigate to 'My Listings' or click 'Post a Listing' in the navigation. Add photos (up to 5), description, price, condition, and category. Your listing will be visible to your campus community immediately!"
         },
         {
           q: "How do payments work?",
-          a: "We use Stripe for secure payments. Buyers can pay through the platform, and funds are held securely until the transaction is confirmed. Sellers receive payouts directly to their connected bank account."
+          a: "Currently, all transactions are arranged directly between buyers and sellers. Campus Connect provides the platform for connecting, but payment arrangements are made in person. Always meet in a safe, public location on campus."
         },
         {
           q: "What fees does Campus Connect charge?",
-          a: "We charge a small service fee on completed transactions to maintain the platform. The exact fee is displayed before you complete your purchase or listing."
+          a: "Campus Connect is completely free - there are no fees for posting listings or making transactions. We don't charge any service fees."
         },
         {
-          q: "How do I boost my listing?",
-          a: "Pro subscribers can boost their listings to appear at the top of search results. Go to your listing and click 'Boost' to increase visibility."
+          q: "How can I edit or delete my listing?",
+          a: "Go to 'My Listings', find your listing, and click on it to view options for editing or deleting. You can update photos, price, description, and mark items as sold."
         }
       ]
     },
@@ -51,19 +51,19 @@ export default function HelpCenterPage() {
       questions: [
         {
           q: "Is it safe to meet buyers/sellers in person?",
-          a: "Always meet in public, well-lit areas on campus. Never share personal financial information. See our Safety Guidelines for more tips on safe transactions."
+          a: "Always meet in public, well-lit areas on campus such as the library, student center, or campus security office. Never share personal financial information or passwords. See our Safety Guidelines for more tips on safe transactions."
         },
         {
-          q: "What should I do if I encounter a scam?",
-          a: "Report the user immediately using the 'Report' button on their profile or listing. Our moderation team reviews all reports within 24 hours."
+          q: "What should I do if I encounter a scam or suspicious activity?",
+          a: "Report the user immediately using the 'Report' button on their profile or listing. Our moderation team reviews all reports within 24 hours and takes appropriate action."
         },
         {
           q: "How does Campus Connect verify users?",
-          a: "All users must verify their university email address. We also offer optional phone verification for added security and trust."
+          a: "Users sign in through our secure authentication system using Google or email. We also offer optional phone verification for added security and trust within the community."
         },
         {
-          q: "Can I block a user?",
-          a: "Yes! Visit the user's profile and click 'Block User'. You won't see their listings or receive messages from them anymore."
+          q: "How do I report inappropriate content?",
+          a: "Use the 'Report' button found on listings, profiles, or events. Describe the issue and our moderation team will review it promptly."
         }
       ]
     },
@@ -72,19 +72,19 @@ export default function HelpCenterPage() {
       questions: [
         {
           q: "How do I edit my profile?",
-          a: "Go to your Profile page and click 'Edit Profile'. You can update your photo, bio, contact preferences, and more."
+          a: "Go to your Profile page by clicking your profile icon in the top right, then click 'Edit Profile'. You can update your profile photo, bio, campus location, and other information."
         },
         {
-          q: "I forgot my password. What do I do?",
-          a: "Click 'Forgot Password' on the login page. We'll send a password reset link to your registered email address."
-        },
-        {
-          q: "How do I delete my account?",
-          a: "Go to Profile Settings > Account > Delete Account. Note that this action is permanent and cannot be undone."
+          q: "How do I sign out?",
+          a: "Click on your profile icon in the top right corner, then select 'Sign Out' from the dropdown menu."
         },
         {
           q: "What is phone verification?",
-          a: "Phone verification adds an extra layer of security to your account. It also increases trust with other users and unlocks certain features."
+          a: "Phone verification adds an extra layer of security to your account and helps build trust with other users. It's optional but recommended for active sellers and event organizers."
+        },
+        {
+          q: "Can I change my email address?",
+          a: "Your account is tied to your authentication method (Google or email). To change it, you'll need to create a new account with the new email address."
         }
       ]
     },
@@ -93,32 +93,19 @@ export default function HelpCenterPage() {
       questions: [
         {
           q: "How do I create an event?",
-          a: "Navigate to the Events section and click 'Create Event'. Add details like time, location, description, and any ticket information."
+          a: "Navigate to the Events section and click 'Create Event'. Add details like title, description, date, time, location, and an optional event image. Events are visible to all campus community members."
         },
         {
-          q: "Can I sponsor an event?",
-          a: "Yes! Pro users and local businesses can sponsor events for increased visibility. Contact our team for sponsorship opportunities."
+          q: "Can I edit or cancel an event I created?",
+          a: "Yes! Go to the event page and you'll see options to edit or delete your event if you're the creator. Any updates will be visible immediately."
         },
         {
-          q: "How do I RSVP to an event?",
-          a: "Click on any event and hit the 'RSVP' or 'Get Tickets' button. You'll receive confirmation and reminders via email."
-        }
-      ]
-    },
-    {
-      category: "Pro Subscription",
-      questions: [
-        {
-          q: "What benefits do I get with Pro?",
-          a: "Pro subscribers get listing boosts, priority support, ad-free experience, advanced analytics, and special badges on their profile."
+          q: "How do I find events on campus?",
+          a: "Visit the Events page to browse all upcoming campus events. You can filter by category and search for specific events."
         },
         {
-          q: "How much does Pro cost?",
-          a: "Pro subscription is $9.99/month or $89.99/year (save 25%). You can cancel anytime."
-        },
-        {
-          q: "Can I cancel my Pro subscription?",
-          a: "Yes! You can cancel anytime from your Profile Settings. You'll retain Pro benefits until the end of your billing period."
+          q: "Can anyone create an event?",
+          a: "Yes! All verified users can create events. This includes club meetings, study groups, campus activities, and social gatherings."
         }
       ]
     }

@@ -4,14 +4,14 @@ import { requireFullAdmin, logAdminAction } from '@/lib/admin-middleware';
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = await requireFullAdmin(req);
     if (authResult instanceof NextResponse) return authResult;
     const { admin } = authResult;
 
-    const { id } = await context.params;
+    const { id } = await params;
     const targetId = Number(id);
     if (!Number.isInteger(targetId) || targetId <= 0) {
       return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
@@ -52,7 +52,18 @@ export async function PATCH(
       );
     }
 
-    const supabase = await sbServer();
+    // Use service role client to bypass RLS for admin operations
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
     const { data: existingUser, error: fetchError } = await supabase
       .from('Profile')
