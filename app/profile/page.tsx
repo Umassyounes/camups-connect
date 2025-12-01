@@ -458,7 +458,7 @@ export default function ProfilePage() {
               <div className="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center text-slate-500">
                 <p className="text-lg font-semibold text-slate-900">No listings yet</p>
                 <p className="text-sm">Launch your first listing to reach other Beacons.</p>
-                <a href="/listings/new" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(99,102,241,0.35)]">
+                <a href="/listings/new" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 px-6 py-3 text-sm font-semibold text-white shadow-lg">
                   Create Your First Listing
                 </a>
               </div>

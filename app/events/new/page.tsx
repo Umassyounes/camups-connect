@@ -99,7 +99,8 @@ export default function NewEventPage() {
 
       if (res.ok) {
         const { data: event } = await res.json()
-        router.push(`/events/${event.id}`)
+        // Redirect to events list page instead
+        router.push('/events')
       } else {
         const error = await res.json()
         console.error("Event creation failed:", error)

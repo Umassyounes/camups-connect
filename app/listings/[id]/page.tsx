@@ -5,8 +5,6 @@ import Link from "next/link"
 import ImageCarousel from "@/components/ImageCarousel"
 import VerifiedBadge from "@/components/VerifiedBadge"
 import ReportButton from "@/components/ReportButton"
-import ProBadge from "@/components/ProBadge"
-import BoostUsageIndicator from "@/components/BoostUsageIndicator"
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic'
@@ -51,7 +49,6 @@ export default function ListingDetailPage({ params }: PageProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
-  const [boostLoading, setBoostLoading] = useState(false)
   const [listingId, setListingId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -176,38 +173,7 @@ export default function ListingDetailPage({ params }: PageProps) {
     }
   }
 
-  async function handleBoostListing() {
-    if (!listing) return
-    setBoostLoading(true)
-    try {
-      const res = await fetch(`/api/listings/${listing.id}/boost`, {
-        method: 'POST',
-      })
 
-      const data = await res.json()
-      if (!res.ok) {
-        // Check if it's a boost limit error
-        if (data.code === 'BOOST_LIMIT_REACHED') {
-          alert(`${data.error}\n\nYou've used ${data.used}/${data.limit} free boosts this month.`)
-          return
-        }
-        alert(data.error || 'Failed to boost listing')
-        return
-      }
-
-      if (data.data?.listing) {
-        setListing(prev => prev ? { ...prev, ...data.data.listing } : data.data.listing)
-      } else if (data.data?.boostedUntil) {
-        setListing(prev => prev ? { ...prev, boostedUntil: data.data.boostedUntil } : prev)
-      }
-      alert('Listing boosted for 24 hours! 🚀')
-    } catch (error) {
-      console.error('Failed to boost listing:', error)
-      alert('Failed to boost listing')
-    } finally {
-      setBoostLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -329,7 +295,6 @@ export default function ListingDetailPage({ params }: PageProps) {
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{sellerName}</p>
                     <VerifiedBadge isVerified={listing.seller.isVerified} size="sm" />
-                    {listing.seller.isPro && <ProBadge size="sm" />}
                   </div>
                   <p className="text-sm text-foreground-secondary">
                     Member since {new Date(listing.seller.createdAt).getFullYear()}
@@ -364,20 +329,6 @@ export default function ListingDetailPage({ params }: PageProps) {
                     >
                       {actionLoading ? 'Processing...' : '✓ Mark as Sold'}
                     </button>
-                  )}
-                  {!listing.isSold && (
-                    <>
-                      <button
-                        onClick={handleBoostListing}
-                        disabled={boostLoading}
-                        className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-bold disabled:opacity-50 shadow-lg"
-                      >
-                        {boostLoading ? 'Boosting...' : '🔥 Boost Listing ($1 / 24h)'}
-                      </button>
-                      <div className="flex justify-center pt-1">
-                        <BoostUsageIndicator />
-                      </div>
-                    </>
                   )}
                   
                   <button 

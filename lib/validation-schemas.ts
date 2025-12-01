@@ -18,8 +18,8 @@ export const createListingSchema = z.object({
   categoryId: z.number().int().positive().optional().nullable(),
   paymentMethods: z
     .array(paymentMethodEnum)
-    .min(1, "Select at least one payment method")
-    .max(4, "You can only select supported payment methods"),
+    .optional()
+    .default([]),
 })
 
 export const updateListingSchema = createListingSchema.partial().extend({

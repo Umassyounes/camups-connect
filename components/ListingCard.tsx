@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import type { Database } from '@/lib/supabase/databaseTypes'
 import VerifiedBadge from './VerifiedBadge'
-import ProBadge from './ProBadge'
-import { isProfilePro } from '@/lib/utils/pro'
 
 type ListingRow = Database['public']['Tables']['Listing']['Row']
 type CategoryRow = Database['public']['Tables']['Category']['Row']
@@ -21,18 +19,18 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const price = typeof listing.priceCents === 'number'
     ? `$${(listing.priceCents / 100).toFixed(0)}`
     : '—'
-  const altText = listing.title ? `Listing: ${listing.title}` : 'Marketplace listing image'
+  const altText = listing.title || 'Marketplace listing image'
   
-  // Use first image from images array, fallback to imageUrl, then placeholder
+  // Use first image from images array, fallback to imageUrl
   const displayImage = listing.images && listing.images.length > 0 
     ? listing.images[0] 
-    : listing.imageUrl || '/no-image.png'
+    : listing.imageUrl
   
   const imageCount = listing.images?.length || (listing.imageUrl ? 1 : 0)
   const isBoosted = Boolean(listing.boostedUntil && new Date(listing.boostedUntil) > new Date())
-  const sellerIsPro = isProfilePro(listing.seller as any)
+  const hasImage = Boolean(displayImage)
   
-  // Determine condition badge color (supports vertical offset stacking if premium also displayed)
+  // Determine condition badge color
   const getConditionBadge = (offsetPx: number = 3) => {
     const condition = listing.condition?.toLowerCase() || ''
     const baseClass = 'absolute left-3 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md'
@@ -65,16 +63,8 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </div>
         )}
         
-        {/* Premium + Condition Badge stacking */}
-        {!listing.isSold && sellerIsPro && (
-          <>
-            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full z-20 shadow-lg flex items-center gap-1">
-              👑 PREMIUM
-            </div>
-            {getConditionBadge(34)}
-          </>
-        )}
-        {!listing.isSold && !sellerIsPro && getConditionBadge()}
+        {/* Condition Badge */}
+        {!listing.isSold && getConditionBadge()}
         
         {isBoosted && !listing.isSold && (
           <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md flex items-center gap-1">
@@ -91,12 +81,16 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </div>
         )}
         
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={displayImage} 
-          alt={altText}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
-        />
+        {hasImage ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img 
+            src={displayImage!} 
+            alt={altText}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          />
+        ) : (
+          <div className="h-full w-full bg-gray-300" />
+        )}
       </div>
       
       {/* Content */}
@@ -136,7 +130,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
               ) : (
                 <div className="w-6 h-6 rounded-full bg-gray-300"></div>
               )}
-              {sellerIsPro && <ProBadge size="sm" />}
             </div>
           )}
         </div>

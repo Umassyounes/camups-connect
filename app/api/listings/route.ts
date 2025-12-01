@@ -186,23 +186,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create listing" }, { status: 500 })
     }
 
-    if (paymentMethods.length > 0) {
-      const { error: paymentOptionError } = await supabase
-        .from('ListingPaymentOption')
-        .insert(
-          paymentMethods.map(methodType => ({
-            listingId: listing.id,
-            paymentMethodType: methodType,
-          }))
-        )
-
-      if (paymentOptionError) {
-        console.error('Failed to attach payment methods to listing:', paymentOptionError)
-        await supabase.from('Listing').delete().eq('id', listing.id)
-        return NextResponse.json({ error: "Failed to save payment options. Please try again." }, { status: 500 })
-      }
-    }
-
     // 🚩 Create FlaggedContent entry if needed
     if (needsReview) {
       const severity = spamScore >= 60 ? 'high' : spamScore >= 45 ? 'medium' : 'low';
@@ -250,7 +233,6 @@ export async function POST(req: NextRequest) {
       data: {
         ...listing,
         seller: withDerivedProFlag(listing.seller),
-        paymentOptions: paymentMethods,
       }
     }, { status: 201 })
   } catch (err: any) {
@@ -282,8 +264,7 @@ export async function GET(req: NextRequest) {
       .select(`
         *,
         category:Category(*),
-        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts),
-        paymentOptions:ListingPaymentOption(paymentMethodType)
+        seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
       `, { count: 'exact' })
 
     // Search filter
@@ -326,9 +307,6 @@ export async function GET(req: NextRequest) {
     const normalizedItems = (items || []).map((item: any) => ({
       ...item,
       seller: withDerivedProFlag(item.seller),
-      paymentOptions: Array.isArray(item.paymentOptions)
-        ? item.paymentOptions.map((opt: any) => opt.paymentMethodType)
-        : [],
     }))
 
     return NextResponse.json({

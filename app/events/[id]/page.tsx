@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { SPONSORED_EVENT_TIERS, SPONSORED_EVENT_STATUS_META, SponsoredEventTier } from "@/lib/types/events"
 
 type Event = {
   id: number
@@ -15,22 +14,6 @@ type Event = {
   imageUrl: string | null
   capacity: number | null
   category: string | null
-  isSponsored: boolean
-  sponsoredBadge: string | null
-  sponsoredPriority: number | null
-  sponsoredUntil: string | null
-  sponsoredSlot: {
-    id: number
-    status: 'pending_payment' | 'scheduled' | 'active' | 'expired' | 'cancelled'
-    sponsorName: string
-    contactEmail: string | null
-    contactPhone: string | null
-    promoUrl: string | null
-    tier: string
-    priceCents: number
-    startsAt: string
-    endsAt: string
-  } | null
   organizer: {
     id: number
     name: string | null
@@ -50,22 +33,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [rsvpLoading, setRsvpLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [eventId, setEventId] = useState<string | null>(null)
-  const [showSponsorForm, setShowSponsorForm] = useState(false)
-  const [selectedTier, setSelectedTier] = useState<SponsoredEventTier>('featured')
-  const [sponsorForm, setSponsorForm] = useState({
-    sponsorName: '',
-    contactEmail: '',
-    contactPhone: '',
-    promoUrl: '',
-    notes: '',
-  })
-  const [sponsorLoading, setSponsorLoading] = useState(false)
-  const [sponsorError, setSponsorError] = useState<string | null>(null)
-  const [sponsorSuccess, setSponsorSuccess] = useState<string | null>(null)
-  const [formInitialized, setFormInitialized] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -76,25 +47,13 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     fetchCurrentUser()
   }, [params])
 
-  useEffect(() => {
-    if (event && !formInitialized) {
-      setSponsorForm(prev => ({
-        sponsorName: prev.sponsorName || event.organizer.name || '',
-        contactEmail: prev.contactEmail,
-        contactPhone: prev.contactPhone,
-        promoUrl: prev.promoUrl,
-        notes: prev.notes,
-      }))
-      setFormInitialized(true)
-    }
-  }, [event, formInitialized])
-
   async function fetchCurrentUser() {
     try {
       const res = await fetch("/api/profile")
       const data = await res.json()
       if (data.data) {
         setCurrentUserId(data.data.id)
+        setIsAdmin(data.data.role === 'ADMIN' || data.data.role === 'MODERATOR')
       }
     } catch (error) {
       console.error("Failed to fetch user:", error)
@@ -178,53 +137,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  function handleSponsorFieldChange(field: keyof typeof sponsorForm, value: string) {
-    setSponsorForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  async function handleSponsorSubmit() {
-    if (!eventId) return
-
-    if (!sponsorForm.sponsorName.trim() || !sponsorForm.contactEmail.trim()) {
-      setSponsorError('Sponsor name and contact email are required.')
-      return
-    }
-
-    setSponsorLoading(true)
-    setSponsorError(null)
-    setSponsorSuccess(null)
-
-    try {
-      const res = await fetch(`/api/events/${eventId}/sponsor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tier: selectedTier,
-          sponsorName: sponsorForm.sponsorName.trim(),
-          contactEmail: sponsorForm.contactEmail.trim(),
-          contactPhone: sponsorForm.contactPhone.trim() || null,
-          promoUrl: sponsorForm.promoUrl.trim() || null,
-          notes: sponsorForm.notes.trim() || null,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to schedule sponsorship')
-      }
-
-      setSponsorSuccess('Sponsorship scheduled! Your event will now be highlighted for students.')
-      setShowSponsorForm(false)
-      if (eventId) {
-        fetchEvent(eventId)
-      }
-    } catch (error: any) {
-      setSponsorError(error.message || 'Failed to schedule sponsorship')
-    } finally {
-      setSponsorLoading(false)
-    }
-  }
-
   function formatDate(dateString: string) {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
@@ -264,9 +176,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
   const isAttending = event.attendees.some(a => a.user.id === currentUserId)
   const isOrganizer = event.organizer.id === currentUserId
+  const canManageEvent = isOrganizer || isAdmin
   const spotsLeft = event.capacity ? event.capacity - event.attendees.length : null
   const isFull = event.capacity && event.attendees.length >= event.capacity
-  const sponsorStatusMeta = event.sponsoredSlot ? SPONSORED_EVENT_STATUS_META[event.sponsoredSlot.status] : null
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -289,7 +201,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
           {event.category && (
-            <span className="absolute top-4 right-4 bg-[rgba(17,26,45,0.88)] backdrop-blur px-4 py-2 rounded-full font-medium text-foreground">
+            <span className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded-full font-medium text-white shadow-lg">
               {event.category}
             </span>
           )}
@@ -298,14 +210,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         {/* Event Details */}
         <div className="p-6 space-y-6 text-foreground">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold text-foreground">{event.title}</h1>
-              {event.isSponsored && (
-                <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 text-sm font-semibold">
-                  {event.sponsoredBadge || 'Sponsored'}
-                </span>
-              )}
-            </div>
+            <h1 className="text-3xl font-bold text-foreground">{event.title}</h1>
             <p className="text-foreground-secondary whitespace-pre-wrap">{event.description}</p>
           </div>
 
@@ -367,208 +272,57 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-            {event.sponsoredSlot && (
-              <div className="rounded-lg border border-amber-300/70 bg-amber-50/40 p-4 space-y-3 text-amber-900 dark:text-amber-100 dark:bg-amber-900/20">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm uppercase tracking-wide text-amber-700 dark:text-amber-300 font-semibold">Sponsored spotlight</p>
-                    <p className="text-lg font-semibold text-amber-900 dark:text-amber-100">Presented by {event.sponsoredSlot.sponsorName}</p>
-                  </div>
-                  {sponsorStatusMeta && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${sponsorStatusMeta.color}`}>
-                      {sponsorStatusMeta.label}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-amber-800/90">
-                  {sponsorStatusMeta?.description || 'This event is currently elevated across campus feeds.'}
+          {/* Action Buttons */}
+          <div className="pt-4 border-t border-border space-y-3">
+            {canManageEvent && (
+              <div className="text-center py-3 rounded-lg bg-[rgba(129,140,248,0.15)]">
+                <p className="text-primary font-medium">
+                  {isOrganizer ? "You are the organizer of this event" : "Admin Access"}
                 </p>
-                <div className="flex flex-wrap gap-4 text-xs font-semibold">
-                  <span>Tier: {event.sponsoredSlot.tier}</span>
-                  <span>Ends {formatDate(event.sponsoredSlot.endsAt)}</span>
-                </div>
-                {event.sponsoredSlot.promoUrl && (
-                  <button
-                    className="text-amber-900 underline font-medium"
-                    onClick={() => {
-                      const promoUrl = event.sponsoredSlot?.promoUrl
-                      if (promoUrl) {
-                        window.open(promoUrl, '_blank', 'noopener,noreferrer')
-                      }
-                    }}
-                  >
-                    Visit sponsor site →
-                  </button>
-                )}
               </div>
             )}
-
-          {/* RSVP Button */}
-          <div className="pt-4 border-t border-border">
-            {!isOrganizer && (
-              <button
-                onClick={handleRSVP}
-                disabled={rsvpLoading || (!!isFull && !isAttending)}
-                className={`w-full py-3 rounded-lg font-medium transition shadow-subtle disabled:opacity-50 ${
-                  isAttending
-                    ? "bg-[var(--background-secondary)] text-foreground hover:opacity-90"
-                    : isFull
-                    ? "bg-[rgba(100,116,139,0.2)] text-foreground-secondary cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-primary-hover"
-                }`}
-              >
-                {rsvpLoading
-                  ? "Processing..."
-                  : isFull && !isAttending
-                  ? "Event Full"
-                  : isAttending
-                  ? "✓ Cancel RSVP"
-                  : "RSVP to Event"}
-              </button>
-            )}
-
-            {isOrganizer && (
-              <div className="space-y-3">
-                <div className="text-center py-3 rounded-lg bg-[rgba(129,140,248,0.15)]">
-                  <p className="text-primary font-medium">You are the organizer of this event</p>
-                </div>
-                <div className="flex gap-2">
+            
+            <div className="flex gap-2">
+              {/* RSVP Button */}
+              {!canManageEvent && (
+                <button
+                  onClick={handleRSVP}
+                  disabled={rsvpLoading || (!!isFull && !isAttending)}
+                  className={`flex-1 py-3 rounded-lg font-medium transition shadow-subtle disabled:opacity-50 ${
+                    isFull && !isAttending
+                      ? "bg-[rgba(100,116,139,0.2)] text-foreground-secondary cursor-not-allowed"
+                      : "bg-red-600 text-white hover:bg-red-700"
+                  }`}
+                >
+                  {rsvpLoading
+                    ? "Processing..."
+                    : isFull && !isAttending
+                    ? "Event Full"
+                    : isAttending
+                    ? "✓ Cancel RSVP"
+                    : "RSVP to Event"}
+                </button>
+              )}
+              
+              {/* Edit and Delete Buttons - For organizer and admins */}
+              {canManageEvent && (
+                <>
                   <button
                     onClick={() => router.push(`/events/${eventId}/edit`)}
-                    className="flex-1 py-3 rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition shadow-subtle"
+                    className="flex-1 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition shadow-subtle"
                   >
                     ✏️ Edit Event
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={deleteLoading}
-                    className="flex-1 py-3 rounded-lg font-medium bg-error text-white hover:opacity-90 transition disabled:opacity-50 shadow-subtle"
+                    className="flex-1 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 shadow-subtle"
                   >
                     {deleteLoading ? "Deleting..." : "🗑️ Delete Event"}
                   </button>
-                </div>
-
-                <div className="rounded-xl border border-border bg-[var(--background-secondary)] p-4 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm uppercase tracking-wide text-foreground-secondary">Boost visibility</p>
-                      <p className="text-lg font-semibold text-foreground">Promote this event to students</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowSponsorForm((prev) => !prev)
-                        setSponsorError(null)
-                        setSponsorSuccess(null)
-                      }}
-                      className="text-sm font-semibold text-primary hover:underline"
-                    >
-                      {showSponsorForm ? 'Hide form' : 'Request sponsorship'}
-                    </button>
-                  </div>
-
-                  {event.sponsoredSlot && !showSponsorForm && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-900 dark:text-amber-100 dark:bg-amber-900/20">
-                      <p className="font-semibold">Current slot: {event.sponsoredSlot.tier}</p>
-                      <p className="text-xs text-amber-800 dark:text-amber-200">Active until {formatDate(event.sponsoredSlot.endsAt)} • {event.sponsoredSlot.status}</p>
-                    </div>
-                  )}
-
-                  {showSponsorForm && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {(Object.values(SPONSORED_EVENT_TIERS) as Array<typeof SPONSORED_EVENT_TIERS[SponsoredEventTier]>).map((tier) => (
-                          <button
-                            key={tier.key}
-                            type="button"
-                            onClick={() => setSelectedTier(tier.key as SponsoredEventTier)}
-                            className={`rounded-xl border p-3 text-left transition ${
-                              selectedTier === tier.key
-                                ? 'border-amber-400 bg-amber-50 shadow-subtle dark:bg-amber-900/30 dark:border-amber-600'
-                                : 'border-border hover:border-amber-200'
-                            }`}
-                          >
-                            <p className="font-semibold text-foreground">{tier.label}</p>
-                            <p className="text-sm text-foreground-secondary">
-                              ${(tier.priceCents / 100).toFixed(2)} / {tier.durationHours}h
-                            </p>
-                            <p className="text-xs text-foreground-secondary mt-1">{tier.badge}</p>
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <label className="flex flex-col gap-1 text-sm">
-                          Sponsor / Club Name
-                          <input
-                            type="text"
-                            value={sponsorForm.sponsorName}
-                            onChange={(e) => handleSponsorFieldChange('sponsorName', e.target.value)}
-                            className="rounded-lg border border-border bg-[var(--card-bg)] px-3 py-2"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-sm">
-                          Contact Email
-                          <input
-                            type="email"
-                            value={sponsorForm.contactEmail}
-                            onChange={(e) => handleSponsorFieldChange('contactEmail', e.target.value)}
-                            className="rounded-lg border border-border bg-[var(--card-bg)] px-3 py-2"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-sm">
-                          Contact Phone (optional)
-                          <input
-                            type="tel"
-                            value={sponsorForm.contactPhone}
-                            onChange={(e) => handleSponsorFieldChange('contactPhone', e.target.value)}
-                            className="rounded-lg border border-border bg-[var(--card-bg)] px-3 py-2"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-sm">
-                          Promo / Ticket URL (optional)
-                          <input
-                            type="url"
-                            value={sponsorForm.promoUrl}
-                            onChange={(e) => handleSponsorFieldChange('promoUrl', e.target.value)}
-                            className="rounded-lg border border-border bg-[var(--card-bg)] px-3 py-2"
-                          />
-                        </label>
-                      </div>
-
-                      <label className="flex flex-col gap-1 text-sm">
-                        Notes for our team (optional)
-                        <textarea
-                          value={sponsorForm.notes}
-                          onChange={(e) => handleSponsorFieldChange('notes', e.target.value)}
-                          className="rounded-lg border border-border bg-[var(--card-bg)] px-3 py-2"
-                          rows={3}
-                        />
-                      </label>
-
-                      {sponsorError && (
-                        <p className="text-error text-sm">{sponsorError}</p>
-                      )}
-                      {sponsorSuccess && (
-                        <p className="text-success text-sm">{sponsorSuccess}</p>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 items-center">
-                        <button
-                          onClick={handleSponsorSubmit}
-                          disabled={sponsorLoading}
-                          className="px-6 py-3 rounded-lg bg-amber-400 text-black font-semibold hover:bg-amber-300 transition disabled:opacity-60"
-                        >
-                          {sponsorLoading ? 'Scheduling...' : 'Request spotlight' }
-                        </button>
-                        <p className="text-xs text-foreground-secondary">
-                          A receipt and payment link will be emailed to confirm your slot.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Attendees List */}

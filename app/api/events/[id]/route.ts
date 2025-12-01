@@ -4,7 +4,6 @@ import { requireAuth, optionalAuth } from "@/lib/auth-middleware"
 import { canModifyEvent, assertOwnership, AuthorizationError } from "@/lib/authorization"
 import { validateRequest, updateEventSchema } from "@/lib/validation-schemas"
 import { rateLimit, RateLimits, getRateLimitIdentifier } from "@/lib/rate-limit"
-import { isEventCurrentlySponsored } from "@/lib/types/events"
 
 type RouteParams = {
   params: Promise<{ id: string }>
@@ -34,8 +33,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         attendees:EventAttendee(
           userId,
           user:Profile!EventAttendee_userId_fkey(id, name, avatarUrl)
-        ),
-        sponsoredSlot:SponsoredEventSlot(*)
+        )
       `)
       .eq('id', eventId)
       .single()
@@ -43,18 +41,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     if (error || !event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
-    
-    const activeSponsored = isEventCurrentlySponsored({
-      isSponsored: event.isSponsored,
-      sponsoredUntil: event.sponsoredUntil,
-    })
 
     return NextResponse.json({
-      data: {
-        ...event,
-        isSponsored: activeSponsored,
-        sponsoredSlot: event.sponsoredSlot ?? null,
-      },
+      data: event,
     })
   } catch (error) {
     console.error("GET /api/events/[id] error:", error)
