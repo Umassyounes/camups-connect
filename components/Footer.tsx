@@ -229,18 +229,11 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="text-slate-500">
-              © {new Date().getFullYear()} Campus Connect. All rights reserved.
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-600 font-medium">Platform Status: Operational</span>
-            </div>
+          <div className="text-slate-500">
+            © {new Date().getFullYear()} Campus Connect. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-slate-500">
             <a href="/accessibility" className="hover:text-sky-500 transition">Accessibility</a>
-            <a href="/sitemap.xml" className="hover:text-sky-500 transition">Sitemap</a>
             <a href="/help" className="hover:text-sky-500 transition">Support</a>
           </div>
         </div>
