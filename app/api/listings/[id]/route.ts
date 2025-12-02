@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sbServer } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { withDerivedProFlag } from "@/lib/utils/pro"
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(
   req: NextRequest,
@@ -191,20 +192,41 @@ export async function DELETE(
       )
     }
 
+    // For admin/moderator deletions, use service role to bypass RLS
+    // For owner deletions, use regular client
+    let deleteClient = supabase
+    if (!isOwner && isAdminOrModerator) {
+      console.log('🔓 Using service role for admin deletion')
+      deleteClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    }
+
     // Delete listing
-    const { error } = await supabase
+    const { error, data } = await deleteClient
       .from('Listing')
       .delete()
       .eq('id', parseInt(id))
+      .select()
+
+    console.log('🗑️ Delete result:', { error, deleted: data?.length || 0, listingId: id })
 
     if (error) {
+      console.error('❌ Delete error:', error)
       return NextResponse.json(
         { error: 'Failed to delete listing' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, deleted: data?.length || 0 })
   } catch (error) {
     console.error('Error deleting listing:', error)
     return NextResponse.json(

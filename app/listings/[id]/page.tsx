@@ -130,7 +130,8 @@ export default function ListingDetailPage({ params }: PageProps) {
 
       if (res.ok) {
         alert('Listing deleted successfully!')
-        router.push('/')
+        // Use hard navigation to force a fresh page load
+        window.location.href = '/'
       } else {
         const error = await res.json()
         alert(error.error || 'Failed to delete listing')
