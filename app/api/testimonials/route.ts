@@ -27,6 +27,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    // ⚠️ Authentication required to leave a review
+    const authSupabase = await sbServer()
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'You must be logged in to leave a review' }, { status: 401 })
+    }
+
     const { name, rating, comment } = await req.json()
 
     // Validation
