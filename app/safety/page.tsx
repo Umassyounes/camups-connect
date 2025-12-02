@@ -301,7 +301,7 @@ export default function SafetyGuidelinesPage() {
                 <div className="bg-gray-100 rounded-lg p-4">
                   <h4 className="font-semibold mb-2">Email Our Team</h4>
                   <p className="text-sm text-gray-600 mb-2">
-                    For urgent safety concerns: <a href="mailto:campusconnectcapstone@gmail.com" className="text-sky-600 hover:underline">campusconnectcapstone@gmail.com</a>
+                    For urgent safety concerns: <a href="mailto:campusconnectcapstone@gmail.com" className="text-sky-600 hover:underline break-all">campusconnectcapstone@gmail.com</a>
                   </p>
                 </div>
                 <div className="bg-gray-100 rounded-lg p-4">

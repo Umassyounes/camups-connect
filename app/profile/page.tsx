@@ -187,11 +187,11 @@ export default function ProfilePage() {
   const name = profile.name || email.split("@")[0]
 
   return (
-    <div className="max-w-6xl w-full mx-auto space-y-8 p-4 sm:p-6">
+    <div className="max-w-6xl w-full mx-auto space-y-6 md:space-y-8 p-3 md:p-4 lg:p-6 pb-20 md:pb-6">
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[var(--card-bg)] rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
+          <div className="bg-white dark:bg-[var(--card-bg)] rounded-xl p-4 md:p-6 max-w-md w-full mx-3 md:mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Edit Profile</h3>
             <div className="space-y-4">
               {/* Avatar Upload */}
@@ -312,26 +312,26 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
         {/* Profile Card - Made wider to fit long usernames */}
         <div className="lg:col-span-1">
-          <div className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] backdrop-blur space-y-4 min-w-[320px] lg:mr-auto">
+          <div className="rounded-2xl md:rounded-3xl border border-white/70 bg-white/90 p-4 md:p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] backdrop-blur space-y-3 md:space-y-4 min-w-0 lg:min-w-[320px] lg:mr-auto">
             {/* Avatar */}
             <div className="flex flex-col items-center text-center">
               {profile.avatarUrl ? (
                 <img 
                   src={profile.avatarUrl} 
                   alt={name}
-                  className="h-24 w-24 rounded-3xl object-cover border-4 border-white shadow-[0_15px_35px_rgba(15,23,42,0.15)]"
+                  className="h-20 w-20 md:h-24 md:w-24 rounded-2xl md:rounded-3xl object-cover border-4 border-white shadow-[0_15px_35px_rgba(15,23,42,0.15)]"
                 />
               ) : (
-                <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-indigo-500/70 to-purple-500/70 flex items-center justify-center text-3xl font-black text-white shadow-[0_15px_35px_rgba(99,102,241,0.45)]">
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl md:rounded-3xl bg-gradient-to-br from-indigo-500/70 to-purple-500/70 flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-[0_15px_35px_rgba(99,102,241,0.45)]">
                   {name.charAt(0).toUpperCase()}
                 </div>
               )}
               {/* Username size reduced & long names wrapped for better readability */}
-              <h2 className="mt-4 text-xl font-bold break-all leading-snug text-slate-900">{name}</h2>
-              <p className="text-sm font-medium text-slate-500">@{email.split("@")[0]}</p>
+              <h2 className="mt-3 md:mt-4 text-lg md:text-xl font-bold break-all leading-snug text-slate-900">{name}</h2>
+              <p className="text-xs md:text-sm font-medium text-slate-500">@{email.split("@")[0]}</p>
               
               {/* Verification Badges */}
               <div className="flex gap-2 mt-2">
@@ -341,7 +341,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+            <div className="grid grid-cols-3 gap-2 md:gap-3 rounded-xl md:rounded-2xl border border-slate-100 bg-slate-50/70 px-3 md:px-4 py-2 md:py-3">
               {[{
                 label: 'Listings', value: listings.length
               }, {
@@ -350,25 +350,25 @@ export default function ProfilePage() {
                 label: 'Deals', value: profile.totalTransactions || 0
               }].map((stat) => (
                 <div className="text-center" key={stat.label}>
-                  <div className="text-2xl font-black text-slate-900">{stat.value}</div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{stat.label}</div>
+                  <div className="text-xl md:text-2xl font-black text-slate-900">{stat.value}</div>
+                  <div className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400">{stat.label}</div>
                 </div>
               ))}
             </div>
 
             {/* Rating Display */}
             {profile.totalRatings > 0 && (
-              <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-4 py-3">
-                <div className="flex items-center justify-center gap-3 text-amber-900">
-                  <div className="flex text-lg">
+              <div className="rounded-xl md:rounded-2xl border border-amber-100 bg-amber-50/70 px-3 md:px-4 py-2 md:py-3">
+                <div className="flex items-center justify-center gap-2 md:gap-3 text-amber-900 flex-wrap">
+                  <div className="flex text-base md:text-lg">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <span key={star} className={star <= Math.round(profile.averageRating) ? 'text-yellow-400' : 'text-yellow-200'}>
                         ⭐
                       </span>
                     ))}
                   </div>
-                  <span className="text-2xl font-black">{profile.averageRating.toFixed(1)}</span>
-                  <span className="text-sm font-semibold">
+                  <span className="text-xl md:text-2xl font-black">{profile.averageRating.toFixed(1)}</span>
+                  <span className="text-xs md:text-sm font-semibold">
                     ({profile.totalRatings} {profile.totalRatings === 1 ? 'rating' : 'ratings'})
                   </span>
                 </div>
@@ -376,27 +376,27 @@ export default function ProfilePage() {
             )}
 
             {/* Buttons */}
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+                className="w-full rounded-xl md:rounded-2xl border border-slate-200 bg-white/80 px-3 md:px-4 py-2 md:py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
               >
                 Edit Profile
               </button>
               <form action="/auth/signout" method="post">
-                <button className="w-full rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(15,23,42,0.35)]">
+                <button className="w-full rounded-xl md:rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 px-3 md:px-4 py-2 md:py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(15,23,42,0.35)]">
                   Logout
                 </button>
               </form>
             </div>
 
             {/* Additional Info */}
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 space-y-3 text-sm">
+            <div className="rounded-xl md:rounded-2xl border border-slate-100 bg-slate-50/70 p-3 md:p-4 space-y-2 md:space-y-3 text-xs md:text-sm">
               {profile.phone && (
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Phone</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-900">{profile.phone}</span>
+                    <span className="font-semibold text-slate-900 text-xs md:text-sm">{profile.phone}</span>
                     {profile.phoneVerified && (
                       <span className="text-xs text-success">Verified</span>
                     )}
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                 </div>
               )}
               {!profile.phoneVerified && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+                <div className="rounded-lg md:rounded-xl border border-amber-200 bg-amber-50/70 p-2 md:p-3">
                   <p className="text-xs text-amber-900 mb-2 font-semibold">
                     📱 Verify your phone number to build trust with other users
                   </p>
@@ -419,19 +419,19 @@ export default function ProfilePage() {
               {profile.campusArea && (
                 <div className="flex justify-between">
                   <span className="text-slate-500">Campus Area</span>
-                  <span className="font-semibold text-slate-900">{profile.campusArea}</span>
+                  <span className="font-semibold text-slate-900 text-xs md:text-sm">{profile.campusArea}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Member Since</span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 text-xs md:text-sm">
                   {new Date(profile.createdAt).getFullYear()}
                 </span>
               </div>
               {profile.bio && (
                 <div className="pt-1">
                   <span className="text-slate-500 block mb-1">Bio</span>
-                  <p className="text-sm text-slate-900">{profile.bio}</p>
+                  <p className="text-xs md:text-sm text-slate-900">{profile.bio}</p>
                 </div>
               )}
             </div>
@@ -440,30 +440,22 @@ export default function ProfilePage() {
 
         {/* My Listings */}
         <div className="lg:col-span-2 lg:pl-6">
-          <div className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)]">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">inventory</p>
-                <h2 className="text-3xl font-black text-slate-900">My Listings</h2>
-                <p className="text-sm text-slate-500">Showcase your items and track sales in one view.</p>
-              </div>
-              <a
-                href="/listings/new"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-              >
-                + New Listing
-              </a>
+          <div className="rounded-2xl md:rounded-3xl border border-white/70 bg-white/90 p-4 md:p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 md:mb-6">
+              <p className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400">inventory</p>
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900">My Listings</h2>
+              <p className="text-xs md:text-sm text-slate-500">Showcase your items and track sales in one view.</p>
             </div>
             {listings.length === 0 ? (
-              <div className="mt-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center text-slate-500">
-                <p className="text-lg font-semibold text-slate-900">No listings yet</p>
-                <p className="text-sm">Launch your first listing to reach other Beacons.</p>
-                <a href="/listings/new" className="mt-4 inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 px-6 py-3 text-sm font-semibold text-white shadow-lg">
+              <div className="mt-6 md:mt-8 rounded-xl md:rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 md:px-6 py-8 md:py-12 text-center text-slate-500">
+                <p className="text-base md:text-lg font-semibold text-slate-900">No listings yet</p>
+                <p className="text-xs md:text-sm">Launch your first listing to reach other Beacons.</p>
+                <a href="/listings/new" className="mt-3 md:mt-4 inline-flex items-center justify-center rounded-xl md:rounded-2xl bg-red-600 hover:bg-red-700 px-5 md:px-6 py-2 md:py-3 text-sm font-semibold text-white shadow-lg">
                   Create Your First Listing
                 </a>
               </div>
             ) : (
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="mt-4 md:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}

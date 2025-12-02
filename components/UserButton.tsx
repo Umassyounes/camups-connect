@@ -84,16 +84,16 @@ export default function UserButton() {
       {/* Profile Picture Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition"
+        className="flex items-center gap-2 p-0.5 md:p-1 rounded-full hover:bg-gray-100 transition"
       >
         {user.avatarUrl ? (
           <img 
             src={user.avatarUrl} 
             alt={user.name || "Profile"}
-            className="w-9 h-9 rounded-full object-cover border-2 border-primary"
+            className="w-7 h-7 md:w-9 md:h-9 rounded-full object-cover border-2 border-primary"
           />
         ) : (
-          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm border border-primary/20">
+          <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs md:text-sm border border-primary/20">
             {initial}
           </div>
         )}

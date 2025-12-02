@@ -241,7 +241,7 @@ export default function HelpCenterPage() {
                 </svg>
                 <span className="font-semibold text-lg text-gray-900">Email Support</span>
               </div>
-              <a href="mailto:campusconnectcapstone@gmail.com" className="text-sky-600 hover:text-sky-700 text-base font-medium">
+              <a href="mailto:campusconnectcapstone@gmail.com" className="text-sky-600 hover:text-sky-700 text-base font-medium break-all">
                 campusconnectcapstone@gmail.com
               </a>
               <p className="text-sm text-gray-600 mt-2">Response within 24 hours</p>

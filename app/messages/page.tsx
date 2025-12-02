@@ -349,18 +349,18 @@ function MessagesPageInner() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="grid grid-cols-3 gap-4 flex-1 min-h-0">
+    <div className="w-full flex flex-col pb-20 md:pb-0 px-3 md:px-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4" style={{ minHeight: 'calc(100vh - 180px)' }}>
         {/* Conversations List */}
-        <div className="col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <h2 className="text-xl font-bold text-foreground">Messages</h2>
+        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} md:col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden`} style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div className="p-3 md:p-4 border-b border-border flex-shrink-0">
+            <h2 className="text-lg md:text-xl font-bold text-foreground">Messages</h2>
           </div>
           
           {conversations.length === 0 ? (
-            <div className="p-8 text-center text-foreground-secondary overflow-y-auto">
-              <p>No conversations yet</p>
-              <p className="text-sm mt-2">Start chatting by viewing a listing</p>
+            <div className="p-6 md:p-8 text-center text-foreground-secondary overflow-y-auto">
+              <p className="text-sm md:text-base">No conversations yet</p>
+              <p className="text-xs md:text-sm mt-2">Start chatting by viewing a listing</p>
             </div>
           ) : (
             <div className="divide-y divide-border overflow-y-auto flex-1">
@@ -368,33 +368,33 @@ function MessagesPageInner() {
                 <button
                   key={conv.id}
                   onClick={() => setSelectedConversationId(conv.id)}
-                  className={`w-full p-4 text-left hover:bg-[var(--background-elevated)] transition ${
+                  className={`w-full p-3 md:p-4 text-left hover:bg-[var(--background-elevated)] transition ${
                     selectedConversationId === conv.id ? 'bg-primary/10' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 md:gap-3">
                     {conv.otherUser.avatarUrl ? (
                       <img 
                         src={conv.otherUser.avatarUrl} 
                         alt={conv.otherUser.name || 'User'}
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0 text-sm md:text-base">
                         {(conv.otherUser.name || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="font-semibold truncate text-foreground">{conv.otherUser.name || 'User'}</p>
+                        <p className="font-semibold truncate text-foreground text-sm md:text-base">{conv.otherUser.name || 'User'}</p>
                         {conv.unreadCount > 0 && (
-                          <span className="bg-primary text-white text-xs rounded-full px-2 py-1">
+                          <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 md:py-1">
                             {conv.unreadCount}
                           </span>
                         )}
                       </div>
                       {conv.lastMessage && (
-                        <p className="text-sm text-foreground-secondary truncate">
+                        <p className="text-xs md:text-sm text-foreground-secondary truncate">
                           {conv.lastMessage.content}
                         </p>
                       )}
@@ -407,30 +407,39 @@ function MessagesPageInner() {
         </div>
 
         {/* Messages Thread */}
-        <div className="col-span-2 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col">
+        <div className={`${selectedConversationId ? 'block' : 'hidden md:block'} md:col-span-2 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col`} style={{ minHeight: 'calc(100vh - 200px)' }}>
           {!selectedConversation ? (
             <div className="flex-1 flex items-center justify-center text-foreground-secondary">
-              <div className="text-center">
-                <p className="text-lg">Select a conversation to start messaging</p>
+              <div className="text-center px-4">
+                <p className="text-sm md:text-lg">Select a conversation to start messaging</p>
               </div>
             </div>
           ) : (
             <>
               {/* Header */}
-              <div className="p-4 border-b border-border flex items-center gap-3">
+              <div className="p-3 md:p-4 border-b border-border flex items-center gap-2 md:gap-3">
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => setSelectedConversationId(null)}
+                  className="md:hidden p-1.5 hover:bg-[var(--background-elevated)] rounded-lg transition"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
                 {selectedConversation.otherUser.avatarUrl ? (
                   <img 
                     src={selectedConversation.otherUser.avatarUrl} 
                     alt={selectedConversation.otherUser.name || 'User'}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm md:text-base">
                     {(selectedConversation.otherUser.name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <h3 className="font-semibold text-foreground">{selectedConversation.otherUser.name || 'User'}</h3>
+                  <h3 className="font-semibold text-foreground text-sm md:text-base">{selectedConversation.otherUser.name || 'User'}</h3>
                 </div>
               </div>
 
@@ -438,12 +447,12 @@ function MessagesPageInner() {
               <div 
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-4 space-y-4"
+                className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4"
               >
                 {messagesLoading ? (
-                  <div className="text-center text-foreground-secondary">Loading messages...</div>
+                  <div className="text-center text-foreground-secondary text-sm md:text-base">Loading messages...</div>
                 ) : messages.length === 0 ? (
-                  <div className="text-center text-foreground-secondary">No messages yet. Start the conversation!</div>
+                  <div className="text-center text-foreground-secondary text-sm md:text-base">No messages yet. Start the conversation!</div>
                 ) : (
                   <>
                     {messages.map((msg) => {
@@ -456,7 +465,7 @@ function MessagesPageInner() {
                           onMouseLeave={() => setHoveredMessageId(null)}
                         >
                           <div className="relative">
-                            <div className={`rounded-lg p-3 ${
+                            <div className={`rounded-lg p-2 md:p-3 max-w-[85%] md:max-w-none ${
                               isOwn ? 'bg-primary text-white' : 'bg-[var(--background-elevated)] text-foreground'
                             }`}>
                               {/* Display based on message type */}
@@ -465,15 +474,15 @@ function MessagesPageInner() {
                                   src={msg.mediaUrl} 
                                   alt="Photo message" 
                                   className="rounded max-w-full h-auto mb-2"
-                                  style={{ maxWidth: '300px' }}
+                                  style={{ maxWidth: '250px' }}
                                 />
                               )}
                               {msg.messageType === 'VOICE' && msg.mediaUrl && (
-                                <audio controls className="mb-2" style={{ maxWidth: '300px' }}>
+                                <audio controls className="mb-2 w-full" style={{ maxWidth: '250px' }}>
                                   <source src={msg.mediaUrl} />
                                 </audio>
                               )}
-                              {msg.content && <p className="text-sm">{msg.content}</p>}
+                              {msg.content && <p className="text-xs md:text-sm break-words">{msg.content}</p>}
                               <p className={`text-xs mt-1 ${isOwn ? 'text-white/80' : 'text-foreground-secondary'}`}>
                                 {(() => {
                                   // Ensure proper UTC parsing - if timestamp doesn't end in Z, add it
@@ -510,7 +519,7 @@ function MessagesPageInner() {
                             {isOwn && hoveredMessageId === msg.id && (
                               <button
                                 onClick={() => unsendMessage(msg.id)}
-                                className="absolute -left-20 top-1/2 -translate-y-1/2 text-xs text-foreground-secondary hover:text-error px-2 py-1 rounded hover:bg-[var(--background-elevated)] transition"
+                                className="hidden md:block absolute -left-20 top-1/2 -translate-y-1/2 text-xs text-foreground-secondary hover:text-error px-2 py-1 rounded hover:bg-[var(--background-elevated)] transition"
                                 title="Unsend message"
                               >
                                 Unsend
@@ -518,7 +527,7 @@ function MessagesPageInner() {
                             )}
                             {/* Report button - only show for other user's messages on hover */}
                             {!isOwn && hoveredMessageId === msg.id && (
-                              <div className="absolute -right-16 top-1/2 -translate-y-1/2">
+                              <div className="hidden md:block absolute -right-16 top-1/2 -translate-y-1/2">
                                 <ReportButton 
                                   contentType="message" 
                                   contentId={msg.id} 
@@ -537,18 +546,18 @@ function MessagesPageInner() {
 
               {/* Photo Preview */}
               {photoPreview && (
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="flex items-end gap-3">
+                <div className="p-3 md:p-4 border-t bg-gray-50">
+                  <div className="flex items-end gap-2 md:gap-3">
                     <div className="relative">
                       <img 
                         src={photoPreview} 
                         alt="Preview" 
-                        className="max-h-32 rounded-lg border-2 border-blue-500"
+                        className="max-h-24 md:max-h-32 rounded-lg border-2 border-blue-500"
                       />
                       <button
                         type="button"
                         onClick={cancelPhoto}
-                        className="absolute -top-2 -right-2 bg-error text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-error-dark transition shadow-lg"
+                        className="absolute -top-2 -right-2 bg-error text-white rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center hover:bg-error-dark transition shadow-lg text-xs md:text-sm"
                       >
                         ✕
                       </button>
@@ -557,7 +566,7 @@ function MessagesPageInner() {
                       type="button"
                       onClick={sendPhoto}
                       disabled={uploading}
-                      className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle"
+                      className="bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle text-sm md:text-base"
                     >
                       {uploading ? 'Sending...' : 'Send Photo'}
                     </button>
@@ -567,13 +576,13 @@ function MessagesPageInner() {
 
               {/* Voice Recording Preview */}
               {audioBlob && !isRecording && (
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <audio controls src={URL.createObjectURL(audioBlob)} className="flex-1" />
+                <div className="p-3 md:p-4 border-t bg-gray-50">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
+                    <audio controls src={URL.createObjectURL(audioBlob)} className="flex-1 w-full" />
                     <button
                       type="button"
                       onClick={cancelVoiceMessage}
-                      className="px-4 py-2 rounded-lg border border-border hover:bg-[var(--background-elevated)] hover:border-primary transition-all"
+                      className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-border hover:bg-[var(--background-elevated)] hover:border-primary transition-all text-sm md:text-base"
                     >
                       Cancel
                     </button>
@@ -581,7 +590,7 @@ function MessagesPageInner() {
                       type="button"
                       onClick={sendVoiceMessage}
                       disabled={uploading}
-                      className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle"
+                      className="bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle text-sm md:text-base"
                     >
                       {uploading ? 'Sending...' : 'Send Voice'}
                     </button>
@@ -591,16 +600,16 @@ function MessagesPageInner() {
 
               {/* Recording Indicator */}
               {isRecording && (
-                <div className="p-4 border-t bg-red-50">
-                  <div className="flex items-center gap-3">
+                <div className="p-3 md:p-4 border-t bg-red-50">
+                  <div className="flex items-center gap-2 md:gap-3">
                     <div className="flex items-center gap-2 flex-1">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-red-600 font-medium">Recording... {formatTime(recordingTime)}</span>
+                      <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full animate-pulse" />
+                      <span className="text-red-600 font-medium text-xs md:text-sm">Recording... {formatTime(recordingTime)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={stopRecording}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                      className="bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-red-700 text-sm md:text-base"
                     >
                       Stop
                     </button>
@@ -609,8 +618,8 @@ function MessagesPageInner() {
               )}
 
               {/* Input */}
-              <form onSubmit={sendMessage} className="p-4 border-t dark:border-gray-700">
-                <div className="flex gap-2">
+              <form onSubmit={sendMessage} className="p-3 md:p-4 border-t dark:border-gray-700">
+                <div className="flex gap-1.5 md:gap-2">
                   {/* Hidden file input */}
                   <input
                     ref={fileInputRef}
@@ -625,10 +634,10 @@ function MessagesPageInner() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading || sending || isRecording}
-                    className="px-4 py-2 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="px-2 md:px-4 py-2 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     title="Send photo"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -639,14 +648,14 @@ function MessagesPageInner() {
                     type="button"
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={uploading || sending}
-                    className={`px-4 py-2 rounded-lg border transition ${
+                    className={`px-2 md:px-4 py-2 rounded-lg border transition ${
                       isRecording 
                         ? 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-800 hover:bg-red-200 dark:hover:bg-red-900/50' 
                         : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                     title={isRecording ? "Stop recording" : "Record voice message"}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                   </button>
@@ -656,15 +665,20 @@ function MessagesPageInner() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={uploading ? "Uploading..." : isRecording ? "Recording..." : "Type a message..."}
-                    className="flex-1 rounded-lg border dark:border-gray-700 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                    className="flex-1 rounded-lg border dark:border-gray-700 px-3 md:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400 text-sm md:text-base"
                     disabled={sending || uploading || isRecording}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || sending || uploading || isRecording}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="bg-blue-600 text-white px-3 md:px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm md:text-base"
                   >
-                    {sending ? 'Sending...' : uploading ? 'Uploading...' : 'Send'}
+                    <span className="hidden sm:inline">{sending ? 'Sending...' : uploading ? 'Uploading...' : 'Send'}</span>
+                    <span className="sm:hidden">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </span>
                   </button>
                 </div>
               </form>

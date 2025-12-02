@@ -52,12 +52,12 @@ export default function MyListingsPage() {
   })
 
   return (
-    <div className="pb-20">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-[var(--background-elevated)] p-8 mb-6 shadow-float">
+    <div className="px-3 md:px-6 pb-20">
+      <div className="relative overflow-hidden rounded-xl md:rounded-2xl border border-border bg-[var(--background-elevated)] p-4 md:p-8 mb-4 md:mb-6 shadow-float">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(129,140,248,0.35),_transparent_60%)]" aria-hidden />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_rgba(14,116,144,0.25),_transparent_70%)]" aria-hidden />
         <div className="relative">
-          <h1 className="text-4xl font-bold mb-3 text-foreground">My Listings</h1>
+          <h1 className="text-2xl md:text-4xl font-bold mb-2 md:mb-3 text-foreground">My Listings</h1>
           <p className="text-lg text-foreground-secondary mb-6">
             Manage your marketplace posts
           </p>
@@ -127,7 +127,7 @@ export default function MyListingsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredListings.map((listing) => (
             <div key={listing.id} className="animate-fade-in">
               <ListingCard listing={listing} />

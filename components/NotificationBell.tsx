@@ -142,12 +142,12 @@ export default function NotificationBell() {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-background-secondary transition-colors"
+        className="relative p-1.5 md:p-2 rounded-lg hover:bg-background-secondary transition-colors"
         aria-label="Notifications"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-foreground"
+          className="h-4 w-4 md:h-6 md:w-6 text-foreground"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

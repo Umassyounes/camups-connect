@@ -181,14 +181,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const isFull = event.capacity && event.attendees.length >= event.capacity
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <Link href="/events" className="text-primary hover:underline mb-4 inline-block">
+    <div className="mx-auto max-w-4xl px-3 md:px-6 pb-20 md:pb-6">
+      <Link href="/events" className="text-primary hover:underline mb-3 md:mb-4 inline-block text-sm md:text-base">
         ← Back to Events
       </Link>
 
   <div className="rounded-xl border border-border bg-[var(--card-bg)] overflow-hidden shadow-subtle">
         {/* Event Image */}
-  <div className="aspect-[21/9] bg-gradient-to-br from-[rgba(129,140,248,0.35)] via-[rgba(14,21,33,0.7)] to-[rgba(14,116,144,0.4)] relative">
+  <div className="aspect-[16/9] md:aspect-[21/9] bg-gradient-to-br from-[rgba(129,140,248,0.35)] via-[rgba(14,21,33,0.7)] to-[rgba(14,116,144,0.4)] relative">
           {event.imageUrl ? (
             <img
               src={event.imageUrl}
@@ -196,72 +196,72 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white text-9xl">
+            <div className="w-full h-full flex items-center justify-center text-white text-6xl md:text-9xl">
               📅
             </div>
           )}
           {event.category && (
-            <span className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded-full font-medium text-white shadow-lg">
+            <span className="absolute top-2 right-2 md:top-4 md:right-4 bg-red-600 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-medium text-white shadow-lg text-xs md:text-base">
               {event.category}
             </span>
           )}
         </div>
 
         {/* Event Details */}
-        <div className="p-6 space-y-6 text-foreground">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6 text-foreground">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{event.title}</h1>
-            <p className="text-foreground-secondary whitespace-pre-wrap">{event.description}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{event.title}</h1>
+            <p className="text-sm md:text-base text-foreground-secondary whitespace-pre-wrap">{event.description}</p>
           </div>
 
           {/* Event Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📅</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 pt-3 md:pt-4 border-t border-border">
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex items-start gap-2 md:gap-3">
+                <span className="text-xl md:text-2xl">📅</span>
                 <div>
-                  <p className="font-semibold">Date</p>
-                  <p className="text-foreground-secondary">{formatDate(event.eventDate)}</p>
+                  <p className="font-semibold text-sm md:text-base">Date</p>
+                  <p className="text-xs md:text-sm text-foreground-secondary">{formatDate(event.eventDate)}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🕐</span>
+              <div className="flex items-start gap-2 md:gap-3">
+                <span className="text-xl md:text-2xl">🕐</span>
                 <div>
-                  <p className="font-semibold">Time</p>
-                  <p className="text-foreground-secondary">
+                  <p className="font-semibold text-sm md:text-base">Time</p>
+                  <p className="text-xs md:text-sm text-foreground-secondary">
                     {formatTime(event.startTime)}
                     {event.endTime && ` - ${formatTime(event.endTime)}`}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📍</span>
+              <div className="flex items-start gap-2 md:gap-3">
+                <span className="text-xl md:text-2xl">📍</span>
                 <div>
-                  <p className="font-semibold">Location</p>
-                  <p className="text-foreground-secondary">{event.location}</p>
+                  <p className="font-semibold text-sm md:text-base">Location</p>
+                  <p className="text-xs md:text-sm text-foreground-secondary">{event.location}</p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">👥</span>
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex items-start gap-2 md:gap-3">
+                <span className="text-xl md:text-2xl">👥</span>
                 <div>
-                  <p className="font-semibold">Attendees</p>
-                  <p className="text-foreground-secondary">
+                  <p className="font-semibold text-sm md:text-base">Attendees</p>
+                  <p className="text-xs md:text-sm text-foreground-secondary">
                     {event.attendees.length} attending
                     {event.capacity && ` (${spotsLeft} spots left)`}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">👤</span>
+              <div className="flex items-start gap-2 md:gap-3">
+                <span className="text-xl md:text-2xl">👤</span>
                 <div>
-                  <p className="font-semibold">Organizer</p>
-                  <p className="text-foreground-secondary">
+                  <p className="font-semibold text-sm md:text-base">Organizer</p>
+                  <p className="text-xs md:text-sm text-foreground-secondary">
                     {event.organizer.name || "Anonymous"}
                   </p>
                   <p className="text-xs text-foreground-secondary">
@@ -273,10 +273,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-border space-y-3">
+          <div className="pt-3 md:pt-4 border-t border-border space-y-2 md:space-y-3">
             {canManageEvent && (
-              <div className="text-center py-3 rounded-lg bg-[rgba(129,140,248,0.15)]">
-                <p className="text-primary font-medium">
+              <div className="text-center py-2 md:py-3 rounded-lg bg-[rgba(129,140,248,0.15)]">
+                <p className="text-sm md:text-base text-primary font-medium">
                   {isOrganizer ? "You are the organizer of this event" : "Admin Access"}
                 </p>
               </div>
@@ -288,7 +288,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <button
                   onClick={handleRSVP}
                   disabled={rsvpLoading || (!!isFull && !isAttending)}
-                  className={`flex-1 py-3 rounded-lg font-medium transition shadow-subtle disabled:opacity-50 ${
+                  className={`flex-1 py-2.5 md:py-3 rounded-lg font-medium transition shadow-subtle disabled:opacity-50 text-sm md:text-base ${
                     isFull && !isAttending
                       ? "bg-[rgba(100,116,139,0.2)] text-foreground-secondary cursor-not-allowed"
                       : "bg-red-600 text-white hover:bg-red-700"
@@ -309,16 +309,22 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <>
                   <button
                     onClick={() => router.push(`/events/${eventId}/edit`)}
-                    className="flex-1 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition shadow-subtle"
+                    className="flex-1 py-2.5 md:py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition shadow-subtle text-sm md:text-base"
                   >
-                    ✏️ Edit Event
+                    <span className="hidden sm:inline">✏️ Edit Event</span>
+                    <span className="sm:hidden">✏️ Edit</span>
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={deleteLoading}
-                    className="flex-1 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 shadow-subtle"
+                    className="flex-1 py-2.5 md:py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 shadow-subtle text-sm md:text-base"
                   >
-                    {deleteLoading ? "Deleting..." : "🗑️ Delete Event"}
+                    {deleteLoading ? "Deleting..." : (
+                      <>
+                        <span className="hidden sm:inline">🗑️ Delete Event</span>
+                        <span className="sm:hidden">🗑️ Delete</span>
+                      </>
+                    )}
                   </button>
                 </>
               )}
@@ -327,18 +333,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Attendees List */}
           {event.attendees.length > 0 && (
-            <div className="pt-4 border-t border-border">
-              <h3 className="font-semibold mb-3 text-foreground">Attendees ({event.attendees.length})</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-foreground">
+            <div className="pt-3 md:pt-4 border-t border-border">
+              <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-foreground">Attendees ({event.attendees.length})</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 text-foreground">
                 {event.attendees.map((attendee) => (
                   <div
                     key={attendee.user.id}
                     className="flex items-center gap-2 p-2 rounded-lg border border-border bg-[var(--background-secondary)]"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[rgba(129,140,248,0.18)] flex items-center justify-center text-primary font-bold flex-shrink-0">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[rgba(129,140,248,0.18)] flex items-center justify-center text-primary font-bold flex-shrink-0 text-xs md:text-sm">
                       {(attendee.user.name || "U").charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm truncate">
+                    <span className="text-xs md:text-sm truncate">
                       {attendee.user.name || "User"}
                     </span>
                   </div>

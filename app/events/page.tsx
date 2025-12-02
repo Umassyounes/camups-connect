@@ -295,19 +295,20 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl px-3 md:px-6 pb-20 md:pb-6">
       {/* Header with Search */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">UMass Boston Events</h1>
-            <p className="mt-1 text-foreground-secondary">Discover and join campus events</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">UMass Boston Events</h1>
+            <p className="mt-1 text-sm md:text-base text-foreground-secondary">Discover and join campus events</p>
           </div>
           <Link
             href="/events/new"
-            className="rounded-lg bg-primary px-4 py-2 text-white shadow-subtle hover:bg-primary-hover transition"
+            className="rounded-lg bg-primary px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base text-white shadow-subtle hover:bg-primary-hover transition whitespace-nowrap"
           >
-            ➕ Create Event
+            <span className="hidden sm:inline">➕ Create Event</span>
+            <span className="sm:hidden">➕</span>
           </Link>
         </div>
         
@@ -318,20 +319,20 @@ export default function EventsPage() {
       </div>
 
       {/* Filters - Simplified to 2 main filters */}
-      <div className="mb-6 flex gap-3">
+      <div className="mb-4 md:mb-6 flex gap-2 md:gap-3 overflow-x-auto pb-2">
         <button
           onClick={() => setFilter("upcoming")}
-          className={`px-4 py-2 rounded-lg transition ${
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
             filter === "upcoming"
               ? "border border-primary bg-primary/15 text-primary shadow-subtle"
               : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
           }`}
         >
-          � Upcoming Events
+          📅 Upcoming Events
         </button>
         <button
           onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded-lg transition ${
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
             filter === "all"
               ? "border border-primary bg-primary/15 text-primary shadow-subtle"
               : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
@@ -342,8 +343,8 @@ export default function EventsPage() {
       </div>
 
       {/* Sponsor Banner - Coming Soon */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-8 text-center">
-        <p className="text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-6 md:mb-8 text-center">
+        <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
       </div>
 
       {/* Events Grid */}
@@ -353,7 +354,7 @@ export default function EventsPage() {
         </div>
       ) : filteredEvents.length === 0 ? (
         <div className="text-center py-12 bg-[var(--card-bg)] rounded-xl border border-border text-foreground-secondary shadow-subtle">
-          <p className="text-lg text-foreground">No events found</p>
+          <p className="text-base md:text-lg text-foreground">No events found</p>
           <p className="text-sm mt-2">
             {sourceFilter === "official" 
               ? "Try syncing UMass Boston events or check back later"
@@ -361,32 +362,32 @@ export default function EventsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {sponsoredEvents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                 <div>
-                  <h2 className="text-2xl font-semibold text-foreground">Sponsored spotlights</h2>
-                  <p className="text-sm text-foreground-secondary">Clubs and local partners promoting upcoming moments.</p>
+                  <h2 className="text-xl md:text-2xl font-semibold text-foreground">Sponsored spotlights</h2>
+                  <p className="text-xs md:text-sm text-foreground-secondary">Clubs and local partners promoting upcoming moments.</p>
                 </div>
-                <Link href="/events/new" className="text-primary text-sm hover:underline">
+                <Link href="/events/new" className="text-primary text-xs md:text-sm hover:underline whitespace-nowrap">
                   Promote your event →
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {sponsoredEvents.map(renderEventCard)}
               </div>
             </section>
           )}
 
           {organicEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {organicEvents.map(renderEventCard)}
             </div>
           ) : (
             <div className="text-center py-10 rounded-xl border border-dashed border-border text-foreground-secondary">
-              <p className="text-foreground">Only sponsored events match this view right now.</p>
-              <p className="text-sm mt-2">Adjust filters to see more campus events.</p>
+              <p className="text-sm md:text-base text-foreground">Only sponsored events match this view right now.</p>
+              <p className="text-xs md:text-sm mt-2">Adjust filters to see more campus events.</p>
             </div>
           )}
         </div>
