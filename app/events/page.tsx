@@ -156,7 +156,7 @@ export default function EventsPage() {
                 </span>
               )}
               {event.category && !event.isExternal && (
-                <span className="bg-[rgba(17,26,45,0.88)] backdrop-blur px-3 py-1 rounded-full text-xs font-medium text-foreground">
+                <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-subtle">
                   {event.category}
                 </span>
               )}
