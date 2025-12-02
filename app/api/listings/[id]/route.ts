@@ -152,23 +152,12 @@ export async function DELETE(
 
     const supabase = await sbServer()
 
-    // Verify ownership
+    // Verify ownership or admin/moderator status
     const { data: listing } = await supabase
       .from('Listing')
       .select('sellerId')
       .eq('id', parseInt(id))
       .single()
-
-    console.log('🔍 Delete listing authorization check:', {
-      listingId: id,
-      listingSellerId: listing?.sellerId,
-      listingSellerIdType: typeof listing?.sellerId,
-      currentUserProfileId: currentUser.profile?.id,
-      currentUserProfileIdType: typeof currentUser.profile?.id,
-      matches: listing?.sellerId === currentUser.profile?.id,
-      strictEqual: listing?.sellerId === currentUser.profile?.id,
-      looseEqual: listing?.sellerId == currentUser.profile?.id
-    })
 
     if (!listing) {
       return NextResponse.json(
@@ -177,8 +166,25 @@ export async function DELETE(
       )
     }
 
-    // Compare using loose equality to handle potential type mismatches
-    if (Number(listing.sellerId) !== Number(currentUser.profile.id)) {
+    // Check if user is the owner
+    const isOwner = Number(listing.sellerId) === Number(currentUser.profile.id)
+    
+    // Check if user is admin or moderator
+    const userRole = currentUser.profile.role?.toUpperCase()
+    const isAdminOrModerator = userRole === 'ADMIN' || userRole === 'MODERATOR'
+
+    console.log('🔍 Delete listing authorization check:', {
+      listingId: id,
+      listingSellerId: listing?.sellerId,
+      currentUserProfileId: currentUser.profile?.id,
+      userRole: userRole,
+      isOwner: isOwner,
+      isAdminOrModerator: isAdminOrModerator,
+      authorized: isOwner || isAdminOrModerator
+    })
+
+    // Allow deletion if user is owner OR admin/moderator
+    if (!isOwner && !isAdminOrModerator) {
       return NextResponse.json(
         { error: 'Not authorized to delete this listing' },
         { status: 403 }
