@@ -109,12 +109,25 @@ export default function EventsPage() {
   }
 
   function formatTime(time: string) {
-    // Convert 24h time to 12h format
-    const [hours, minutes] = time.split(":")
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? "PM" : "AM"
-    const hour12 = hour % 12 || 12
-    return `${hour12}:${minutes} ${ampm}`
+    // Handle both ISO timestamp strings and HH:MM format
+    let date: Date
+    
+    if (time.includes('T') || time.includes('Z')) {
+      // It's an ISO timestamp
+      date = new Date(time)
+    } else {
+      // It's just a time string like "14:30"
+      const [hours, minutes] = time.split(":")
+      date = new Date()
+      date.setHours(parseInt(hours), parseInt(minutes))
+    }
+    
+    // Format to 12-hour time
+    return date.toLocaleTimeString("en-US", {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   function renderEventCard(event: Event) {
