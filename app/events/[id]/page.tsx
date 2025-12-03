@@ -82,6 +82,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     const isAttending = event?.attendees.some(a => a.user.id === currentUserId)
+    console.log('🎫 RSVP Debug:', {
+      currentUserId,
+      attendees: event?.attendees,
+      isAttending,
+      action: isAttending ? "cancel" : "rsvp"
+    })
     
     setRsvpLoading(true)
     try {
@@ -148,11 +154,25 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   function formatTime(time: string) {
-    const [hours, minutes] = time.split(":")
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? "PM" : "AM"
-    const hour12 = hour % 12 || 12
-    return `${hour12}:${minutes} ${ampm}`
+    // Handle both ISO timestamp strings and HH:MM format
+    let date: Date
+    
+    if (time.includes('T') || time.includes('Z')) {
+      // It's an ISO timestamp
+      date = new Date(time)
+    } else {
+      // It's just a time string like "14:30"
+      const [hours, minutes] = time.split(":")
+      date = new Date()
+      date.setHours(parseInt(hours), parseInt(minutes))
+    }
+    
+    // Format to 12-hour time
+    return date.toLocaleTimeString("en-US", {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   if (loading) {
