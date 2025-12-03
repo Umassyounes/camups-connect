@@ -1,10 +1,10 @@
 import "./globals.css"
 import UserButton from "@/components/UserButton"
 import Footer from "@/components/Footer"
-import ThemeToggle from "@/components/ThemeToggle"
 import NotificationBell from "@/components/NotificationBell"
 import AdminNavLink from "@/components/AdminNavLink"
 import ClientProviders from "@/components/ClientProviders"
+import BottomNav from "@/components/BottomNav"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -79,12 +79,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </header>
 
             {/* Page content */}
-            <main className="flex-1">
+            <main className="flex-1 pb-16 sm:pb-0">
               {children}
             </main>
 
             {/* Footer */}
             <Footer />
+
+            {/* Bottom navigation - mobile only */}
+            <BottomNav />
           </div>
         </ClientProviders>
       </body>
