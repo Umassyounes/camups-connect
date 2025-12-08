@@ -137,6 +137,9 @@ export default function ProfilePage() {
         setAvatarPreview(data.data.avatarUrl)
         setAvatarFile(null)
         setShowEditModal(false)
+        
+        // Dispatch event to update avatar in UserButton
+        window.dispatchEvent(new CustomEvent('profileUpdated'))
       }
     } catch (error) {
       console.error('Failed to update profile:', error)

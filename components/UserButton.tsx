@@ -13,7 +13,7 @@ export default function UserButton() {
     // Fetch user profile with avatar
     async function fetchUserProfile(userId: string) {
       try {
-        const res = await fetch('/api/profile')
+        const res = await fetch('/api/profile', { cache: 'no-store' })
         const data = await res.json()
         if (data.data) {
           return data.data.avatarUrl
@@ -50,7 +50,21 @@ export default function UserButton() {
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Listen for profile updates via custom event
+    const handleProfileUpdate = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const avatarUrl = await fetchUserProfile(session.user.id)
+        setUser(prev => prev ? { ...prev, avatarUrl } : null)
+      }
+    }
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('profileUpdated', handleProfileUpdate)
+    }
   }, [])
 
   // Close dropdown when clicking outside

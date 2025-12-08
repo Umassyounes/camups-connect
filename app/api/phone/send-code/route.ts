@@ -121,41 +121,18 @@ export async function POST(req: NextRequest) {
     // Generate 6-digit code and send via Twilio Verify API
     try {
       console.log('📨 Sending verification code via Twilio Verify...');
+      console.log('🔑 Twilio env check:', {
+        hasSID: !!process.env.TWILIO_ACCOUNT_SID,
+        hasToken: !!process.env.TWILIO_AUTH_TOKEN,
+        hasServiceSID: !!process.env.TWILIO_VERIFY_SERVICE_SID,
+        SID: process.env.TWILIO_ACCOUNT_SID?.substring(0, 10) + '...'
+      });
       
       if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_VERIFY_SERVICE_SID) {
-        // For development/testing: generate code manually
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiryTime = new Date(Date.now() + 15 * 60 * 1000);
-
-        // Update profile with verification code using service role to bypass RLS
-        const { createClient } = await import('@supabase/supabase-js');
-        const serviceRoleClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        );
-
-        await serviceRoleClient
-          .from('Profile')
-          .update({
-            phone: normalizedPhone,
-            phoneVerificationCode: verificationCode,
-            phoneVerificationExpiry: expiryTime.toISOString(),
-          })
-          .eq('id', profile.id);
-
-        console.log(`📱 [DEV MODE] Verification code for ${normalizedPhone}: ${verificationCode}`);
+        console.error('❌ Twilio credentials not configured');
         return NextResponse.json({ 
-          success: true, 
-          message: 'Verification code sent!',
-          devMode: true,
-          code: verificationCode
-        });
+          error: 'Phone verification is temporarily unavailable. Please contact support.',
+        }, { status: 503 });
       }
 
       // Use Twilio Verify API
