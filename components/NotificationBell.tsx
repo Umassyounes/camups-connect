@@ -17,8 +17,6 @@ interface Notification {
 }
 
 export default function NotificationBell() {
-  console.log('🔔 NotificationBell component rendered');
-  
   const [isOpen, setIsOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -26,7 +24,6 @@ export default function NotificationBell() {
 
   // Get current user ID
   useEffect(() => {
-    console.log('🔍 Fetching user ID from /api/profile');
     let isMounted = true;
 
     const fetchUserId = async () => {
@@ -41,19 +38,15 @@ export default function NotificationBell() {
           const profile = body?.data;
 
           if (profile?.id) {
-            console.log('✅ Got user ID:', profile.id);
             setCurrentUserId(profile.id);
           } else {
-            console.warn('⚠️ Profile payload missing id field:', body);
             setCurrentUserId(null);
           }
         } else {
-          console.error('❌ Failed to fetch profile:', res.status);
           setCurrentUserId(null);
         }
       } catch (error) {
         if (isMounted) {
-          console.error('❌ Error fetching user ID:', error);
           setCurrentUserId(null);
         }
       }

@@ -31,16 +31,31 @@ export interface NSFWResult {
   shouldReject: boolean;
 }
 
+// Track if we've already logged the warning to avoid log spam
+let nsfwWarningLogged = false;
+
 /**
  * Check image for NSFW content using Sightengine
  */
 export async function detectNSFW(imageUrl: string): Promise<NSFWResult> {
   const API_USER = process.env.SIGHTENGINE_API_USER;
   const API_SECRET = process.env.SIGHTENGINE_API_SECRET;
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  // If API keys not configured, return safe (disable check)
+  // If API keys not configured, log a warning (especially important in production)
   if (!API_USER || !API_SECRET) {
-    console.log('⚠️ Sightengine API not configured - skipping NSFW check');
+    if (!nsfwWarningLogged) {
+      if (isProduction) {
+        console.error('🚨 SECURITY WARNING: NSFW detection is DISABLED in production!');
+        console.error('   Set SIGHTENGINE_API_USER and SIGHTENGINE_API_SECRET environment variables.');
+        console.error('   Without NSFW detection, inappropriate images may be uploaded.');
+      } else {
+        console.warn('⚠️ NSFW detection disabled - Sightengine API not configured');
+        console.warn('   This is acceptable for development but MUST be configured for production.');
+      }
+      nsfwWarningLogged = true;
+    }
+    
     return {
       isNSFW: false,
       confidence: 0,

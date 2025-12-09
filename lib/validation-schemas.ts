@@ -2,38 +2,49 @@ import { z } from "zod"
 
 /**
  * Zod schemas for API input validation
+ * For utility functions (sanitize, escape, etc.), see validation.ts
  */
 
-const paymentMethodEnum = z.enum(["venmo", "cashapp", "zelle", "cash"])
-const sponsoredEventTierEnum = z.enum(["spotlight", "featured", "community"])
+// ============================================
+// SHARED ENUMS
+// ============================================
 
-// Listing schemas
+export const paymentMethodEnum = z.enum(["venmo", "cashapp", "zelle", "cash"])
+export const sponsoredEventTierEnum = z.enum(["spotlight", "featured", "community"])
+export const conditionEnum = z.enum(["NEW", "LIKE_NEW", "GOOD", "FAIR", "POOR"])
+export const messageTypeEnum = z.enum(["TEXT", "PHOTO", "VOICE"])
+
+// ============================================
+// LISTING SCHEMAS
+// ============================================
+
 export const createListingSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   description: z.string().min(10, "Description must be at least 10 characters").max(5000),
   priceCents: z.number().int().min(0).max(100000000), // Max $1,000,000
-  condition: z.enum(["NEW", "LIKE_NEW", "GOOD", "FAIR", "POOR"]),
+  condition: conditionEnum,
   imageUrl: z.string().url().optional().nullable(),
   images: z.array(z.string().url()).optional().default([]),
   campus: z.string().max(100).optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),
-  paymentMethods: z
-    .array(paymentMethodEnum)
-    .optional()
-    .default([]),
+  paymentMethods: z.array(paymentMethodEnum).optional().default([]),
 })
 
 export const updateListingSchema = createListingSchema.partial().extend({
   isSold: z.boolean().optional(),
 })
 
-export type CreateListingInput = z.infer<typeof createListingSchema>
-
 export const markListingAsSoldSchema = z.object({
   isSold: z.boolean(),
 })
 
-// Event schemas
+export type CreateListingInput = z.infer<typeof createListingSchema>
+export type UpdateListingInput = z.infer<typeof updateListingSchema>
+
+// ============================================
+// EVENT SCHEMAS
+// ============================================
+
 export const createEventSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10).max(5000),
@@ -57,10 +68,16 @@ export const sponsoredEventRequestSchema = z.object({
   notes: z.string().max(500).optional().nullable(),
 })
 
-// Message schemas
+export type CreateEventInput = z.infer<typeof createEventSchema>
+export type UpdateEventInput = z.infer<typeof updateEventSchema>
+
+// ============================================
+// MESSAGE SCHEMAS
+// ============================================
+
 export const createMessageSchema = z.object({
   content: z.string().min(1).max(2000).optional(),
-  messageType: z.enum(["TEXT", "PHOTO", "VOICE"]).default("TEXT"),
+  messageType: messageTypeEnum.default("TEXT"),
   mediaUrl: z.string().url().optional().nullable(),
 })
 
@@ -69,7 +86,12 @@ export const createConversationSchema = z.object({
   sellerId: z.number().int().positive(),
 })
 
-// Profile schemas
+export type CreateMessageInput = z.infer<typeof createMessageSchema>
+
+// ============================================
+// PROFILE SCHEMAS
+// ============================================
+
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatarUrl: z.string().url().optional().nullable(),
@@ -78,14 +100,23 @@ export const updateProfileSchema = z.object({
   bio: z.string().max(1000).optional().nullable(),
 })
 
-// File upload schemas
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
+
+// ============================================
+// FILE UPLOAD SCHEMAS
+// ============================================
+
 export const fileUploadSchema = z.object({
   file: z.instanceof(File),
   type: z.enum(["image", "audio"]),
 })
 
+// ============================================
+// VALIDATION MIDDLEWARE HELPERS
+// ============================================
+
 /**
- * Middleware to validate request body against a schema
+ * Validate request JSON body against a Zod schema
  */
 export async function validateRequest<T>(
   req: Request,
@@ -107,14 +138,14 @@ export async function validateRequest<T>(
 }
 
 /**
- * Middleware to validate FormData against a schema
+ * Validate FormData against a Zod schema
  */
 export function validateFormData<T>(
   formData: FormData,
   schema: z.ZodSchema<T>
 ): { data: T } | { error: string; details?: z.ZodError } {
   try {
-    const obj: any = {}
+    const obj: Record<string, unknown> = {}
     formData.forEach((value, key) => {
       obj[key] = value
     })

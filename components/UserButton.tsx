@@ -21,16 +21,13 @@ export default function UserButton() {
         })
         if (res.ok) {
           const data = await res.json()
-          console.log('UserButton: Profile data received:', data.data?.avatarUrl)
           if (data.data?.avatarUrl) {
             avatarCacheRef.current = data.data.avatarUrl // Cache the avatar
             return data.data.avatarUrl
           }
-        } else {
-          console.log('UserButton: Profile fetch failed with status:', res.status)
         }
       } catch (error) {
-        console.error('Failed to fetch profile:', error)
+        // Silently fail - user will just see default avatar
       }
       // Return cached avatar if fetch failed
       return avatarCacheRef.current
