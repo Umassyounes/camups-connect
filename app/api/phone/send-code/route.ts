@@ -20,14 +20,27 @@ export async function POST(req: NextRequest) {
     console.log('📝 Parsing request body...');
     const body = await req.json();
     const schema = z.object({
-      phone: z.string().regex(/^\+?1?\d{10,15}$/, 'Invalid phone number format'),
+      phone: z.string().min(10, 'Phone number too short').max(15, 'Phone number too long'),
     });
 
     const { phone } = schema.parse(body);
     console.log('📞 Phone number received:', phone);
 
-    // Normalize phone number (ensure it has country code)
-    const normalizedPhone = phone.startsWith('+') ? phone : `+1${phone.replace(/\D/g, '')}`;
+    // Strip all non-digits and normalize
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Validate US phone number (10 digits, or 11 with leading 1)
+    let normalizedPhone: string;
+    if (digitsOnly.length === 10) {
+      normalizedPhone = `+1${digitsOnly}`;
+    } else if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
+      normalizedPhone = `+${digitsOnly}`;
+    } else {
+      return NextResponse.json({ 
+        error: 'Invalid phone number. Please enter a valid 10-digit US phone number.',
+        hint: 'Format: (555) 123-4567 or 5551234567'
+      }, { status: 400 });
+    }
     console.log('📞 Normalized phone:', normalizedPhone);
 
     const supabase = await sbServer();
@@ -152,7 +165,8 @@ export async function POST(req: NextRequest) {
 
       console.log(`✅ Twilio Verify SMS sent to ${normalizedPhone}, status: ${verification.status}`);
 
-      // Update profile with phone number and clear old verification codes
+      // Store the pending phone number for verification (NOT as verified phone yet)
+      // The actual phone field will only be updated when code is verified
       const { createClient } = await import('@supabase/supabase-js');
       const serviceRoleClient = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -165,12 +179,13 @@ export async function POST(req: NextRequest) {
         }
       );
 
+      // Store pending phone in verification fields only - don't update main phone field
       await serviceRoleClient
         .from('Profile')
         .update({
-          phone: normalizedPhone,
-          phoneVerificationCode: null, // Twilio manages the code
-          phoneVerificationExpiry: null,
+          phoneVerificationCode: normalizedPhone, // Store pending phone here temporarily
+          phoneVerificationExpiry: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          // Don't update 'phone' field - that only happens on successful verification
         })
         .eq('id', profile.id);
 
@@ -181,38 +196,11 @@ export async function POST(req: NextRequest) {
     } catch (twilioError: any) {
       console.error('Twilio Verify error:', twilioError);
       
-      // Fallback to dev mode if Twilio fails
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiryTime = new Date(Date.now() + 15 * 60 * 1000);
-
-      const { createClient } = await import('@supabase/supabase-js');
-      const serviceRoleClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-
-      await serviceRoleClient
-        .from('Profile')
-        .update({
-          phone: normalizedPhone,
-          phoneVerificationCode: verificationCode,
-          phoneVerificationExpiry: expiryTime.toISOString(),
-        })
-        .eq('id', profile.id);
-
+      // Return error - don't save phone number on failure
       return NextResponse.json({ 
-        success: true,
-        message: 'Verification code generated (SMS failed - check logs)',
-        warning: twilioError.message || 'SMS service error',
-        code: verificationCode,
-        devMode: true
-      });
+        error: 'Failed to send verification code. Please check your phone number and try again.',
+        details: twilioError.message || 'SMS service error'
+      }, { status: 400 });
     }
   } catch (error) {
     console.error('Error in POST /api/phone/send-code:', error);

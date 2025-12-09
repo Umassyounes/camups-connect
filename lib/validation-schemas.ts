@@ -14,6 +14,7 @@ export const createListingSchema = z.object({
   priceCents: z.number().int().min(0).max(100000000), // Max $1,000,000
   condition: z.enum(["NEW", "LIKE_NEW", "GOOD", "FAIR", "POOR"]),
   imageUrl: z.string().url().optional().nullable(),
+  images: z.array(z.string().url()).optional().default([]),
   campus: z.string().max(100).optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),
   paymentMethods: z

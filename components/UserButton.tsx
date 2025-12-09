@@ -6,22 +6,30 @@ export default function UserButton() {
   const [user, setUser] = useState<{ email: string; name?: string; avatarUrl?: string | null } | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const avatarCacheRef = useRef<string | null>(null) // Cache to prevent losing avatar
   
   useEffect(() => {
     const supabase = sb()
     
     // Fetch user profile with avatar
-    async function fetchUserProfile(userId: string) {
+    async function fetchUserProfile(userId: string): Promise<string | null> {
       try {
-        const res = await fetch('/api/profile', { cache: 'no-store' })
-        const data = await res.json()
-        if (data.data) {
-          return data.data.avatarUrl
+        const res = await fetch('/api/profile', { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.data?.avatarUrl) {
+            avatarCacheRef.current = data.data.avatarUrl // Cache the avatar
+            return data.data.avatarUrl
+          }
         }
       } catch (error) {
         console.error('Failed to fetch profile:', error)
       }
-      return null
+      // Return cached avatar if fetch failed
+      return avatarCacheRef.current
     }
     
     // Get initial session
@@ -47,6 +55,7 @@ export default function UserButton() {
         })
       } else {
         setUser(null)
+        avatarCacheRef.current = null // Clear cache on logout
       }
     })
 

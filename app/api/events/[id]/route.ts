@@ -225,7 +225,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// DELETE /api/events/[id] - Delete event (organizer only)
+// DELETE /api/events/[id] - Delete event (organizer or admin only)
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     // Authentication
@@ -245,13 +245,44 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const rateLimitResponse = rateLimit(rateLimitIdentifier, RateLimits.STRICT)
     if (rateLimitResponse) return rateLimitResponse
 
-    // Authorization - verify ownership
+    const supabase = await sbServer()
+
+    // Check if user is admin or moderator
+    const { data: profile } = await supabase
+      .from('Profile')
+      .select('role')
+      .eq('supabaseId', user.supabaseId)
+      .single()
+
+    const userRole = profile?.role?.toUpperCase()
+    const isAdminOrModerator = userRole === 'ADMIN' || userRole === 'MODERATOR'
+
+    // Authorization - verify ownership OR admin/moderator status
     const canModify = await canModifyEvent(user.id, eventId)
-    await assertOwnership(canModify)
+    
+    if (!canModify && !isAdminOrModerator) {
+      return NextResponse.json({ error: 'Only the organizer or admin can delete this event' }, { status: 403 })
+    }
+
+    // For admin deletions, use service role to bypass RLS
+    let deleteClient = supabase
+    if (!canModify && isAdminOrModerator) {
+      console.log('🔓 Using service role for admin event deletion')
+      const { createClient } = await import('@supabase/supabase-js')
+      deleteClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    }
 
     // Delete the event (cascade will delete attendees)
-    const supabase = await sbServer()
-    const { error } = await supabase
+    const { error } = await deleteClient
       .from('Event')
       .delete()
       .eq('id', eventId)

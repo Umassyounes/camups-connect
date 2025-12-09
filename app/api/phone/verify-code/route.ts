@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if already verified
-    if (profile.phoneVerified) {
+    if (profile.phoneVerified && profile.phone) {
       return NextResponse.json({ 
         success: true,
         message: 'Phone number already verified!',
@@ -45,16 +45,28 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (!profile.phone) {
+    // Get the pending phone number from phoneVerificationCode field
+    // (We store it there temporarily until verification succeeds)
+    const pendingPhone = profile.phoneVerificationCode;
+    
+    if (!pendingPhone || !pendingPhone.startsWith('+')) {
       return NextResponse.json({ 
-        error: 'No phone number found. Please request a verification code first.' 
+        error: 'No pending phone verification. Please request a verification code first.' 
       }, { status: 400 });
     }
 
-    // Try Twilio Verify API first
+    // Check if verification request expired
+    if (profile.phoneVerificationExpiry && new Date(profile.phoneVerificationExpiry) < new Date()) {
+      return NextResponse.json({ 
+        error: 'Verification request expired. Please request a new code.' 
+      }, { status: 400 });
+    }
+
+    // Try Twilio Verify API
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID) {
       try {
         console.log('🔐 Verifying code with Twilio Verify API...');
+        console.log('📞 Checking code for phone:', pendingPhone);
         const twilio = require('twilio');
         const twilioClient = twilio(
           process.env.TWILIO_ACCOUNT_SID,
@@ -65,7 +77,7 @@ export async function POST(req: NextRequest) {
           .services(process.env.TWILIO_VERIFY_SERVICE_SID)
           .verificationChecks
           .create({
-            to: profile.phone,
+            to: pendingPhone,
             code: code
           });
 
@@ -77,7 +89,7 @@ export async function POST(req: NextRequest) {
           }, { status: 400 });
         }
 
-        // ✅ Code verified by Twilio! Mark phone as verified
+        // ✅ Code verified by Twilio! Save phone and mark as verified
         const { createClient } = await import('@supabase/supabase-js');
         const serviceRoleClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,6 +105,7 @@ export async function POST(req: NextRequest) {
         const { error: updateError } = await serviceRoleClient
           .from('Profile')
           .update({
+            phone: pendingPhone, // NOW we save the verified phone number
             phoneVerified: true,
             phoneVerifiedAt: new Date().toISOString(),
             phoneVerificationCode: null,
@@ -105,7 +118,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Failed to verify phone number' }, { status: 500 });
         }
 
-        console.log(`✅ Phone verified for user ${profile.id}: ${profile.phone}`);
+        console.log(`✅ Phone verified for user ${profile.id}: ${pendingPhone}`);
 
         return NextResponse.json({ 
           success: true, 
@@ -114,71 +127,17 @@ export async function POST(req: NextRequest) {
         });
       } catch (twilioError: any) {
         console.error('❌ Twilio Verify error:', twilioError);
-        // Fall through to manual verification below
+        return NextResponse.json({ 
+          error: 'Failed to verify code. Please try again.',
+          details: twilioError.message
+        }, { status: 400 });
       }
     }
 
-    // Fallback to manual verification (for dev mode or if Twilio fails)
-    console.log('📝 Using manual verification (dev mode)...');
-    
-    // Check if code exists
-    if (!profile.phoneVerificationCode) {
-      console.log('❌ No verification code in profile');
-      return NextResponse.json({ 
-        error: 'No verification code found. Please request a new code.' 
-      }, { status: 400 });
-    }
-
-    // Check if code expired
-    if (profile.phoneVerificationExpiry && new Date(profile.phoneVerificationExpiry) < new Date()) {
-      return NextResponse.json({ 
-        error: 'Verification code expired. Please request a new code.' 
-      }, { status: 400 });
-    }
-
-    // Check if code matches
-    if (profile.phoneVerificationCode !== code) {
-      return NextResponse.json({ 
-        error: 'Invalid verification code. Please try again.' 
-      }, { status: 400 });
-    }
-
-    // ✅ Code is valid! Mark phone as verified
-    // Use service role to bypass RLS for the update
-    const { createClient } = await import('@supabase/supabase-js');
-    const serviceRoleClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    const { error: updateError } = await serviceRoleClient
-      .from('Profile')
-      .update({
-        phoneVerified: true,
-        phoneVerifiedAt: new Date().toISOString(),
-        phoneVerificationCode: null, // Clear the code
-        phoneVerificationExpiry: null,
-      })
-      .eq('id', profile.id);
-
-    if (updateError) {
-      console.error('Error verifying phone:', updateError);
-      return NextResponse.json({ error: 'Failed to verify phone number' }, { status: 500 });
-    }
-
-    console.log(`✅ Phone verified for user ${profile.id}: ${profile.phone}`);
-
+    // No Twilio configured - return error
     return NextResponse.json({ 
-      success: true, 
-      message: 'Phone number verified successfully! 🎉',
-      verified: true 
-    });
+      error: 'Phone verification service not configured. Please contact support.' 
+    }, { status: 503 });
   } catch (error) {
     console.error('Error in POST /api/phone/verify-code:', error);
     if (error instanceof z.ZodError) {

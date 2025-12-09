@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       )
     }
   const payload = validation.data as CreateListingInput
-    const { title, description, priceCents, condition, categoryId, imageUrl, campus, paymentMethods } = payload
+    const { title, description, priceCents, condition, categoryId, imageUrl, images, campus, paymentMethods } = payload
 
     // 🛡️ CONTENT MODERATION
     console.log('🛡️ Running content moderation...');
@@ -169,6 +169,7 @@ export async function POST(req: NextRequest) {
         categoryId: categoryId ?? null,
         condition,
         imageUrl: imageUrl ?? null,
+        images: images || [],
         campus: campus ?? null,
         sellerId: user.id,
         createdAt: now,

@@ -124,12 +124,6 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/listings" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  Marketplace
-                </a>
-              </li>
-              <li>
                 <a href="/reviews" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                   Reviews
