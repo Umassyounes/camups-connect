@@ -13,6 +13,7 @@ export const createListingSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters").max(5000),
   priceCents: z.number().int().min(0).max(100000000), // Max $1,000,000
   condition: z.enum(["NEW", "LIKE_NEW", "GOOD", "FAIR", "POOR"]),
+  images: z.array(z.string().url()).optional().default([]),
   imageUrl: z.string().url().optional().nullable(),
   campus: z.string().max(100).optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),

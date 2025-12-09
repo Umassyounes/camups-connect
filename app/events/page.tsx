@@ -308,22 +308,20 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-3 md:px-6 pb-20 md:pb-6">
+    <div className="mx-auto max-w-7xl px-3 md:px-6 pb-20 md:pb-6">
       {/* Header with Search */}
       <div className="mb-4 md:mb-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">UMass Boston Events</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">UMB Events</h1>
             <p className="mt-1 text-sm md:text-base text-foreground-secondary">Discover and join campus events</p>
           </div>
-          <Link
-            href="/events/new"
-            className="rounded-lg bg-primary px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base text-white shadow-subtle hover:bg-primary-hover transition whitespace-nowrap"
-          >
-            <span className="hidden sm:inline">➕ Create Event</span>
-            <span className="sm:hidden">➕</span>
-          </Link>
         </div>
+
+        {/* Sponsor Banner - Coming Soon */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-6 md:mb-8 text-center">
+        <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
+      </div>
         
         {/* Search Bar */}
         <div className="max-w-2xl">
@@ -353,11 +351,6 @@ export default function EventsPage() {
         >
           🗓️ All Events
         </button>
-      </div>
-
-      {/* Sponsor Banner - Coming Soon */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-6 md:mb-8 text-center">
-        <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
       </div>
 
       {/* Events Grid */}

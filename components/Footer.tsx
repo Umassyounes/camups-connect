@@ -63,48 +63,16 @@ export default function Footer() {
                 className="w-12 h-12 rounded-2xl shadow-[0_10px_40px_rgba(56,189,248,0.3)] ring-2 ring-sky-400/30" 
               />
               <div>
-                <div className="font-semibold text-xs tracking-[0.25em] uppercase text-sky-600">Campus Connect</div>
                 <div className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-sky-600">
-                  Beacons
+                  Campus Connect
                 </div>
+                <div className="font-semibold text-xs tracking-[0.25em] uppercase text-sky-600">By Beacons, For Beacons</div>
               </div>
             </div>
             <p className="text-base text-slate-600 leading-relaxed mb-6 max-w-md">
               Empowering campus communities to connect, trade, and thrive together. Your trusted 
               marketplace for student life.
             </p>
-            
-            {/* Newsletter Signup */}
-            <div className="bg-slate-100 backdrop-blur-lg border border-slate-300 rounded-2xl p-4">
-              <h4 className="font-semibold text-sm mb-3 text-slate-800">Stay Updated 📬</h4>
-              <form onSubmit={handleNewsletterSignup} className="space-y-2">
-                <div className="flex gap-2">
-                  <input 
-                    type="email" 
-                    placeholder="Your email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                    className="flex-1 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition disabled:opacity-50"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 rounded-lg font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? '...' : 'Join'}
-                  </button>
-                </div>
-                {message && (
-                  <p className={`text-xs ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                    {message.text}
-                  </p>
-                )}
-                <p className="text-xs text-slate-500 mt-2">
-                  Note: Please use a Gmail account. Other providers may block our emails.
-                </p>
-              </form>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -115,18 +83,6 @@ export default function Footer() {
                 <a href="/how-it-works" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                   How It Works
-                </a>
-              </li>
-              <li>
-                <a href="/events" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  Events
-                </a>
-              </li>
-              <li>
-                <a href="/listings" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  Marketplace
                 </a>
               </li>
               <li>

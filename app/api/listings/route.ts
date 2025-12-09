@@ -10,175 +10,146 @@ import { withDerivedProFlag } from "@/lib/utils/pro"
 // CREATE a listing
 export async function POST(req: NextRequest) {
   try {
-    // Authentication
     const authResult = await requireAuth(req)
     if (authResult instanceof NextResponse) return authResult
     const { user } = authResult
 
-    // Rate limiting - strict for write operations
     const rateLimitIdentifier = getRateLimitIdentifier(req, "listings:create", user.id)
     const rateLimitResponse = rateLimit(rateLimitIdentifier, RateLimits.STRICT)
     if (rateLimitResponse) return rateLimitResponse
 
-    // Validation
     const validation = await validateRequest(req, createListingSchema)
-    if ('error' in validation) {
+    if ("error" in validation) {
+      return NextResponse.json({ error: validation.error, details: validation.details }, { status: 400 })
+    }
+    const payload = validation.data as CreateListingInput
+    const { title, description, priceCents, condition, categoryId, imageUrl, images = [], campus, paymentMethods } = payload
+
+    const normalizedImages = images && images.length > 0 ? images : imageUrl ? [imageUrl] : []
+
+    const titleModeration = moderateText(title)
+    if (shouldAutoReject(titleModeration)) {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: "Your listing title contains inappropriate or spam content", reasons: titleModeration.reasons },
         { status: 400 }
       )
     }
-  const payload = validation.data as CreateListingInput
-    const { title, description, priceCents, condition, categoryId, imageUrl, campus, paymentMethods } = payload
 
-    // 🛡️ CONTENT MODERATION
-    console.log('🛡️ Running content moderation...');
-    
-    // Check title for spam/inappropriate content
-    const titleModeration = moderateText(title);
-    if (shouldAutoReject(titleModeration)) {
-      console.log('❌ Listing rejected - inappropriate title:', titleModeration);
-      return NextResponse.json({
-        error: 'Your listing title contains inappropriate or spam content',
-        reasons: titleModeration.reasons,
-      }, { status: 400 });
-    }
-
-    // Check description
-    const descriptionModeration = moderateText(description);
+    const descriptionModeration = moderateText(description)
     if (shouldAutoReject(descriptionModeration)) {
-      console.log('❌ Listing rejected - inappropriate description:', descriptionModeration);
-      return NextResponse.json({
-        error: 'Your listing description contains inappropriate or spam content',
-        reasons: descriptionModeration.reasons,
-      }, { status: 400 });
+      return NextResponse.json(
+        { error: "Your listing description contains inappropriate or spam content", reasons: descriptionModeration.reasons },
+        { status: 400 }
+      )
     }
 
-    // Calculate spam score
-    const spamScore = calculateSpamScore({ title, description, priceCents });
-    console.log('📊 Spam score:', spamScore);
-
-    // Auto-reject high spam scores (lowered from 70 to 50 for stricter filtering)
+    const spamScore = calculateSpamScore({ title, description, priceCents })
     if (spamScore >= 50) {
-      console.log('❌ Listing rejected - high spam score:', spamScore);
-      return NextResponse.json({
-        error: 'Your listing appears to be spam or violates our community guidelines',
-        reasons: [
-          ...titleModeration.reasons,
-          ...descriptionModeration.reasons,
-        ],
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Your listing appears to be spam or violates our community guidelines",
+          reasons: [...titleModeration.reasons, ...descriptionModeration.reasons],
+        },
+        { status: 400 }
+      )
     }
 
-    // 🛡️ NSFW Image Detection (if image URL provided)
-    let nsfwReasons: string[] = [];
-    let shouldRejectNSFW = false;
-    if (imageUrl) {
-      console.log('🖼️ Checking image for NSFW content...');
-      const nsfwResult = await detectNSFW(imageUrl);
-      console.log('NSFW Score:', nsfwResult.confidence, 'Categories:', nsfwResult.categories);
-      
-      // Auto-reject if confidence >= 0.5 (lowered from 0.7 for stricter filtering)
+    // NSFW Image Detection (multiple images supported)
+    let nsfwReasons: string[] = []
+    let shouldRejectNSFW = false
+    for (const img of normalizedImages) {
+      if (!img) continue
+      const nsfwResult = await detectNSFW(img)
       if (nsfwResult.shouldReject || nsfwResult.confidence >= 0.5) {
-        console.log('❌ Listing rejected - NSFW image:', nsfwResult);
-        shouldRejectNSFW = true;
-        
-        // Create FlaggedContent entry for rejected attempt (without listing ID)
-        const supabase = await sbServer();
-        await supabase
-          .from('FlaggedContent')
-          .insert({
-            contentType: 'listing',
-            contentId: 0, // No listing ID since it was rejected
-            userId: user.id,
-            reason: `NSFW image rejected: ${nsfwResult.categories.join(', ')}`,
-            severity: nsfwResult.confidence >= 0.7 ? 'high' : 'medium',
-            status: 'rejected',
-            source: 'auto',
-            details: {
-              nsfwScore: nsfwResult.confidence,
-              categories: nsfwResult.categories,
-              imageUrl: imageUrl.substring(0, 200),
-              title: title.substring(0, 100),
-              description: description.substring(0, 200),
-              rejectedAt: new Date().toISOString(),
-            },
-          });
-        
-        return NextResponse.json({
-          error: 'Image contains inappropriate content (NSFW detected)',
-          categories: nsfwResult.categories,
-          confidence: nsfwResult.confidence,
-        }, { status: 400 });
+        shouldRejectNSFW = true
+        const supabase = await sbServer()
+        await supabase.from("FlaggedContent").insert({
+          contentType: "listing",
+          contentId: 0,
+          userId: user.id,
+          reason: `NSFW image rejected: ${nsfwResult.categories.join(", ")}`,
+          severity: nsfwResult.confidence >= 0.7 ? "high" : "medium",
+          status: "rejected",
+          source: "auto",
+          details: {
+            nsfwScore: nsfwResult.confidence,
+            categories: nsfwResult.categories,
+            imageUrl: img.substring(0, 200),
+            title: title.substring(0, 100),
+            description: description.substring(0, 200),
+            rejectedAt: new Date().toISOString(),
+          },
+        })
+
+        return NextResponse.json(
+          {
+            error: "Image contains inappropriate content (NSFW detected)",
+            categories: nsfwResult.categories,
+            confidence: nsfwResult.confidence,
+          },
+          { status: 400 }
+        )
       }
-      
+
       if (nsfwResult.isNSFW) {
-        console.log('⚠️ Image flagged: Potentially inappropriate content');
-        nsfwReasons.push(`Image flagged: ${nsfwResult.categories.join(', ')}`);
+        nsfwReasons.push(`Image flagged: ${nsfwResult.categories.join(", ")}`)
       }
     }
 
-    // Flag for review if moderate spam score OR NSFW image
-    const needsReview = spamScore >= 30 || 
-                        shouldFlagForReview(titleModeration) || 
-                        shouldFlagForReview(descriptionModeration) ||
-                        nsfwReasons.length > 0;
-    
-    if (needsReview) {
-      console.log('⚠️ Listing flagged for review - spam score:', spamScore, 'NSFW:', nsfwReasons.length > 0);
-    }
+    const needsReview =
+      spamScore >= 30 ||
+      shouldFlagForReview(titleModeration) ||
+      shouldFlagForReview(descriptionModeration) ||
+      nsfwReasons.length > 0
 
     const supabase = await sbServer()
 
-    // Verify category exists if provided
     if (categoryId) {
-      const { data: category } = await supabase
-        .from('Category')
-        .select('id')
-        .eq('id', categoryId)
-        .single()
-      
+      const { data: category } = await supabase.from("Category").select("id").eq("id", categoryId).single()
       if (!category) {
         return NextResponse.json({ error: "Category not found" }, { status: 400 })
       }
     }
 
     const now = new Date().toISOString()
-    // Ensure seller has the selected payment methods active
     const { data: sellerPaymentMethods } = await supabase
-      .from('PaymentMethod')
-      .select('methodType, isActive')
-      .eq('userId', user.id)
-      .eq('isActive', true)
+      .from("PaymentMethod")
+      .select("methodType, isActive")
+      .eq("userId", user.id)
+      .eq("isActive", true)
 
-  const availableMethods = new Set((sellerPaymentMethods || []).map((pm: any) => pm.methodType))
-  const invalidSelections = paymentMethods.filter(method => !availableMethods.has(method))
-
+    const availableMethods = new Set((sellerPaymentMethods || []).map((pm: any) => pm.methodType))
+    const invalidSelections = paymentMethods.filter((method) => !availableMethods.has(method))
     if (invalidSelections.length > 0) {
-      return NextResponse.json({
-        error: `Some payment methods are not active on your account: ${invalidSelections.join(', ')}`,
-      }, { status: 400 })
+      return NextResponse.json(
+        { error: `Some payment methods are not active on your account: ${invalidSelections.join(", ")}` },
+        { status: 400 }
+      )
     }
 
     const { data: listing, error } = await supabase
-      .from('Listing')
-  .insert({
+      .from("Listing")
+      .insert({
         title,
         description,
         priceCents,
         categoryId: categoryId ?? null,
         condition,
-        imageUrl: imageUrl ?? null,
+        imageUrl: normalizedImages[0] ?? null,
+        images: normalizedImages,
+        imageCount: normalizedImages.length,
         campus: campus ?? null,
         sellerId: user.id,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       })
-      .select(`
+      .select(
+        `
         *,
         category:Category(*),
         seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
-      `)
+      `
+      )
       .single()
 
     if (error || !listing) {
@@ -186,26 +157,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create listing" }, { status: 500 })
     }
 
-    // 🚩 Create FlaggedContent entry if needed
     if (needsReview) {
-      const severity = spamScore >= 60 ? 'high' : spamScore >= 45 ? 'medium' : 'low';
+      const severity = spamScore >= 60 ? "high" : spamScore >= 45 ? "medium" : "low"
       const reasons = [
         ...titleModeration.reasons,
         ...descriptionModeration.reasons,
         ...nsfwReasons,
         spamScore >= 30 ? `Spam score: ${spamScore}` : null,
-      ].filter(Boolean);
+      ].filter(Boolean)
 
-      const { data: flagged, error: flagError } = await supabase
-        .from('FlaggedContent')
+      const { error: flagError } = await supabase
+        .from("FlaggedContent")
         .insert({
-          contentType: 'listing',
+          contentType: "listing",
           contentId: listing.id,
           userId: user.id,
-          reason: reasons.join(', '),
+          reason: reasons.join(", "),
           severity,
-          status: 'pending',
-          source: 'auto',
+          status: "pending",
+          source: "auto",
           details: {
             spamScore,
             titleModeration,
@@ -213,28 +183,27 @@ export async function POST(req: NextRequest) {
             nsfwCheck: nsfwReasons.length > 0,
             title: title.substring(0, 100),
             description: description.substring(0, 200),
-            imageUrl: imageUrl ? imageUrl.substring(0, 200) : null,
+            imageUrl: normalizedImages[0] ? normalizedImages[0].substring(0, 200) : null,
           },
           createdAt: now,
         })
         .select()
-        .single();
+        .single()
 
       if (flagError) {
-        console.error('❌ Failed to create FlaggedContent entry:', flagError);
-      } else {
-        console.log(`✅ Created FlaggedContent entry #${flagged.id} for listing ${listing.id}`);
-        console.log(`   Severity: ${severity}, Spam Score: ${spamScore}`);
-        console.log(`   Reasons: ${reasons.join(', ')}`);
+        console.error("Failed to create FlaggedContent entry:", flagError)
       }
     }
 
-    return NextResponse.json({
-      data: {
-        ...listing,
-        seller: withDerivedProFlag(listing.seller),
-      }
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        data: {
+          ...listing,
+          seller: withDerivedProFlag(listing.seller),
+        },
+      },
+      { status: 201 }
+    )
   } catch (err: any) {
     console.error("POST /api/listings failed:", err)
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 })
@@ -244,7 +213,6 @@ export async function POST(req: NextRequest) {
 // READ listings (kept for completeness)
 export async function GET(req: NextRequest) {
   try {
-    // Rate limiting - lenient for public read operations
     const rateLimitIdentifier = getRateLimitIdentifier(req, "listings:read")
     const rateLimitResponse = rateLimit(rateLimitIdentifier, RateLimits.LENIENT)
     if (rateLimitResponse) return rateLimitResponse
@@ -267,12 +235,10 @@ export async function GET(req: NextRequest) {
         seller:Profile!Listing_sellerId_fkey(id, name, avatarUrl, proStatus, proPlan, proHomepageEligible, proUnlimitedBoosts)
       `, { count: 'exact' })
 
-    // Search filter
     if (q) {
       query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
     }
 
-    // Category filter
     if (category) {
       const { data: categoryData } = await supabase
         .from('Category')
@@ -285,7 +251,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Status filter
     if (status === "active") {
       query = query.eq('isSold', false)
     } else if (status === "sold") {

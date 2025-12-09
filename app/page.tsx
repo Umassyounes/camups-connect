@@ -1,4 +1,4 @@
-﻿import { sbServer } from "@/lib/supabase/server"
+import { sbServer } from "@/lib/supabase/server"
 import ListingCard from "@/components/ListingCard"
 import SearchBar from "@/components/SearchBar"
 import FilterSortButtons from "@/components/FilterSortButtons"
@@ -102,10 +102,23 @@ export default async function Marketplace({
 
   return (
     <main className="min-h-screen pb-20 bg-[#F5F7FA]">
-      {/* Search Section */}
-      <section className="bg-white border-b border-gray-200 py-4 md:py-8 mb-6 md:mb-8">
-        <div className="mx-auto max-w-7xl px-3 md:px-6">
-          {/* Large Search Bar with Filters */}
+      {/* Hero + Search */}
+      <section className="bg-white border-b border-gray-200">
+        <div className="mx-auto max-w-7xl px-3 md:px-6 py-6 md:py-8 space-y-4 md:space-y-5">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#1A202C] mb-1">
+              {proOnly ? '🌟 Pro Members' : 'UMB Marketplace'}
+            </h1>
+            <p className="text-sm md:text-base text-[#718096]">
+              {proOnly ? 'Exclusive listings from verified Pro sellers' : 'Verified listings from trusted students'}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6 text-center">
+            <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Content Coming Soon</p>
+          </div>
+
+          {/* Search and Sort */}
           <div className="flex flex-col gap-2 md:gap-3">
             <div className="flex-1 w-full">
               <div className="relative">
@@ -121,24 +134,9 @@ export default async function Marketplace({
       </section>
 
       <div className="mx-auto max-w-7xl px-3 md:px-6 py-4 md:py-8">
-        {/* Section Header */}
-        <div className="mb-4 md:mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#1A202C] mb-1 md:mb-2">
-            {proOnly ? '✨ Pro Members' : 'Premium Marketplace'}
-          </h2>
-          <p className="text-sm md:text-base text-[#718096]">
-            {proOnly ? 'Exclusive listings from verified Pro sellers' : 'Verified listings from trusted students'}
-          </p>
-        </div>
-
-        {/* Sponsor Banner - Coming Soon */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-4 md:mb-6 text-center">
-          <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Content Coming Soon</p>
-        </div>
-
         {listings.length === 0 ? (
           <div className="text-center py-12 md:py-16 text-foreground-secondary">
-            <div className="text-5xl md:text-6xl mb-3 md:mb-4">📦</div>
+            <div className="text-5xl md:text-6xl mb-3 md:mb-4">??</div>
             <p className="text-lg md:text-xl text-foreground mb-1 md:mb-2">No listings found</p>
             <p className="text-xs md:text-sm">{proOnly ? 'No Pro listings available' : 'Be the first to post an item!'}</p>
           </div>
@@ -147,10 +145,10 @@ export default async function Marketplace({
             {!proOnly && listings.some((l: any) => isProfilePro(l.seller) && l.seller?.proHomepageEligible) && (
               <div className="mb-3 md:mb-4 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs md:text-sm text-foreground-secondary">
                 <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 md:px-3 py-1 md:py-1.5 rounded-full font-medium w-fit">
-                  <span className="text-sm md:text-base">✨</span>
+                  <span className="text-sm md:text-base">?</span>
                   <span className="text-xs md:text-sm">Featured Pro Sellers</span>
                 </span>
-                <span className="hidden sm:inline">—</span>
+                <span className="hidden sm:inline">-</span>
                 <span className="text-xs md:text-sm">Pro members appear first in search results</span>
               </div>
             )}
@@ -164,7 +162,7 @@ export default async function Marketplace({
           </>
         )}
 
-        {/* Monetization section removed – not user-facing */}
+        {/* Monetization section removed - not user-facing */}
       </div>
     </main>
   )

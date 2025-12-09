@@ -61,12 +61,6 @@ export default function MyListingsPage() {
           <p className="text-lg text-foreground-secondary mb-6">
             Manage your marketplace posts
           </p>
-          <Link 
-            href="/listings/new"
-            className="inline-block rounded-lg bg-primary px-6 py-3 font-semibold text-white shadow-subtle hover:bg-primary-hover transition"
-          >
-            + Create New Listing
-          </Link>
         </div>
       </div>
 
@@ -117,14 +111,6 @@ export default function MyListingsPage() {
           <p className="text-sm mb-6">
             {filter === "all" ? "Create your first listing to get started!" : ""}
           </p>
-          {filter === "all" && (
-            <Link 
-              href="/listings/new"
-              className="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover transition-all font-medium shadow-subtle"
-            >
-              Create Listing
-            </Link>
-          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
