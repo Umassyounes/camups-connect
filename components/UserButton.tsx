@@ -143,7 +143,10 @@ export default function UserButton() {
               </svg>
               View Profile
             </a>
-            
+
+            <div className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              Your stuff
+            </div>
             <a
               href="/my"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A202C] hover:bg-gray-50 transition"
@@ -153,15 +156,23 @@ export default function UserButton() {
               </svg>
               My Listings
             </a>
-
             <a
-              href="/messages"
+              href="/events/mine"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A202C] hover:bg-gray-50 transition"
             >
               <svg className="w-4 h-4 text-[#4A5568]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V4m8 3V4m-9 8h10M5 20h14a1 1 0 001-1V7H4v12a1 1 0 001 1z" />
               </svg>
-              Messages
+              My Events
+            </a>
+            <a
+              href="/saved"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A202C] hover:bg-gray-50 transition"
+            >
+              <svg className="w-4 h-4 text-[#4A5568]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              Saved
             </a>
 
             <hr className="my-1 border-gray-100" />

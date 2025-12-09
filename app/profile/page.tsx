@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react"
 import { sb } from "@/lib/supabase/browser"
 import VerifiedBadge from "@/components/VerifiedBadge"
-import type { Database } from "@/lib/supabase/databaseTypes"
 
 type Profile = {
   id: number
@@ -10,13 +9,10 @@ type Profile = {
   avatarUrl: string | null
   phone: string | null
   phoneVerified: boolean
-  campusArea: string | null
   bio: string | null
   createdAt: string
-  averageRating: number
-  totalRatings: number
-  totalTransactions: number
 }
+
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -25,7 +21,6 @@ export default function ProfilePage() {
   const [editForm, setEditForm] = useState({
     name: "",
     phone: "",
-    campusArea: "",
     bio: ""
   })
   const [saving, setSaving] = useState(false)
@@ -35,13 +30,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const supabase = sb()
-    
     supabase.auth.getUser().then(({ data }) => {
-      const user = data.user
-      if (!user) {
+      const u = data.user
+      if (!u) {
         window.location.href = "/login"
       } else {
-        setUser(user)
+        setUser(u)
         fetchProfile()
       }
     })
@@ -49,21 +43,19 @@ export default function ProfilePage() {
 
   async function fetchProfile() {
     try {
-      const res = await fetch('/api/profile')
+      const res = await fetch("/api/profile")
       const data = await res.json()
-      
       if (data.data) {
         setProfile(data.data)
         setEditForm({
           name: data.data.name || "",
           phone: data.data.phone || "",
-          campusArea: data.data.campusArea || "",
           bio: data.data.bio || ""
         })
         setAvatarPreview(data.data.avatarUrl)
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error)
+      console.error("Failed to fetch profile:", error)
     } finally {
       setLoading(false)
     }
@@ -73,17 +65,15 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       let avatarUrl = profile?.avatarUrl
-
-      // Upload avatar if a new file was selected
       if (avatarFile) {
         setUploadingAvatar(true)
         const uploadFormData = new FormData()
-        uploadFormData.append('file', avatarFile)
-        uploadFormData.append('type', 'photo') // Changed from 'avatar' to 'photo'
+        uploadFormData.append("file", avatarFile)
+        uploadFormData.append("type", "photo")
 
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: uploadFormData
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
         })
 
         if (uploadRes.ok) {
@@ -92,7 +82,7 @@ export default function ProfilePage() {
             avatarUrl = uploadData.data.url
           }
         } else {
-          alert('Failed to upload avatar')
+          alert("Failed to upload avatar")
           setUploadingAvatar(false)
           setSaving(false)
           return
@@ -100,28 +90,26 @@ export default function ProfilePage() {
         setUploadingAvatar(false)
       }
 
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...editForm,
-          avatarUrl
-        })
+          avatarUrl,
+        }),
       })
-      
+
       const data = await res.json()
       if (data.data) {
         setProfile(data.data)
         setAvatarPreview(data.data.avatarUrl)
         setAvatarFile(null)
         setShowEditModal(false)
-        
-        // Dispatch event to update avatar in UserButton
-        window.dispatchEvent(new CustomEvent('profileUpdated'))
+        window.dispatchEvent(new CustomEvent("profileUpdated"))
       }
     } catch (error) {
-      console.error('Failed to update profile:', error)
-      alert('Failed to update profile')
+      console.error("Failed to update profile:", error)
+      alert("Failed to update profile")
     } finally {
       setSaving(false)
       setUploadingAvatar(false)
@@ -131,22 +119,16 @@ export default function ProfilePage() {
   function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file")
       return
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image must be less than 5MB')
+      alert("Image must be less than 5MB")
       return
     }
-
     setAvatarFile(file)
-    const previewUrl = URL.createObjectURL(file)
-    setAvatarPreview(previewUrl)
+    setAvatarPreview(URL.createObjectURL(file))
   }
 
   function removeAvatar() {
@@ -166,60 +148,46 @@ export default function ProfilePage() {
 
   const email = user.email ?? "unknown@umb.edu"
   const name = profile.name || email.split("@")[0]
-  const showInventory = false
-  const listings: any[] = []
+  const memberYear = new Date(profile.createdAt).getFullYear()
 
   return (
-    <div className="max-w-6xl w-full mx-auto space-y-6 md:space-y-8 p-3 md:p-4 lg:p-6 pb-20 md:pb-6">
-      {/* Edit Profile Modal */}
+    <div className="max-w-4xl mx-auto w-full p-4 md:p-6 lg:p-8 pb-16 space-y-6">
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
           <div className="bg-white dark:bg-[var(--card-bg)] rounded-xl p-4 md:p-6 max-w-md w-full mx-3 md:mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Edit Profile</h3>
             <div className="space-y-4">
-              {/* Avatar Upload */}
               <div>
-                <label className="block text-sm font-medium mb-2">Profile Picture</label>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
+                <label className="block text-sm font-medium mb-2">Profile Photo</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
                     {avatarPreview ? (
-                      <img 
-                        src={avatarPreview} 
-                        alt="Avatar preview"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-primary"
-                      />
+                      <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
-                        {name.charAt(0).toUpperCase()}
-                      </div>
+                      <span className="text-2xl text-slate-400">?</span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="cursor-pointer">
+                  <div className="space-x-2">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition">
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={handleAvatarSelect}
                         className="hidden"
+                        onChange={handleAvatarSelect}
                       />
-                      <span className="inline-block px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover transition">
-                        {avatarPreview ? 'Change Photo' : 'Upload Photo'}
-                      </span>
+                      Upload
                     </label>
                     {avatarFile && (
                       <button
-                        type="button"
                         onClick={removeAvatar}
-                        className="text-sm text-error hover:text-error-dark hover:underline transition"
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-[var(--background-elevated)]"
+                        type="button"
                       >
                         Remove
                       </button>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-foreground-secondary mt-2">
-                  Recommended: Square image, max 5MB
-                </p>
               </div>
 
               <div>
@@ -229,40 +197,18 @@ export default function ProfilePage() {
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   className="w-full border border-border rounded-lg px-3 py-2 bg-[var(--input-bg)] text-foreground"
-                  placeholder="Your name"
+                  placeholder="Your full name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Phone Number (Optional)</label>
+                <label className="block text-sm font-medium mb-1">Phone</label>
                 <input
                   type="tel"
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                   className="w-full border border-border rounded-lg px-3 py-2 bg-[var(--input-bg)] text-foreground"
-                  placeholder="(123) 456-7890"
+                  placeholder="(555) 123-4567"
                 />
-                <p className="text-xs text-foreground-secondary mt-1">
-                  For easier meetup coordination
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Campus Area</label>
-                <select
-                  value={editForm.campusArea}
-                  onChange={(e) => setEditForm({ ...editForm, campusArea: e.target.value })}
-                  className="w-full border border-border rounded-lg px-3 py-2 bg-[var(--input-bg)] text-foreground"
-                >
-                  <option value="">Select area</option>
-                  <option value="North Campus">North Campus</option>
-                  <option value="South Campus">South Campus</option>
-                  <option value="Harbor Campus">Harbor Campus</option>
-                  <option value="Off-Campus">Off-Campus</option>
-                  <option value="Dorchester">Dorchester</option>
-                  <option value="Other">Other</option>
-                </select>
-                <p className="text-xs text-foreground-secondary mt-1">
-                  Where you usually meet for pickup/dropoff
-                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Bio</label>
@@ -288,146 +234,52 @@ export default function ProfilePage() {
                 className="flex-1 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-lg"
                 disabled={saving || uploadingAvatar}
               >
-                {uploadingAvatar ? 'Uploading...' : saving ? 'Saving...' : 'Save'}
+                {uploadingAvatar ? "Uploading..." : saving ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
-        {/* Profile Card - Made wider to fit long usernames */}
-        <div className="lg:col-span-1">
-          <div className="rounded-2xl md:rounded-3xl border border-white/70 bg-white/90 p-4 md:p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] backdrop-blur space-y-3 md:space-y-4 min-w-0 lg:min-w-[320px] lg:mr-auto">
-            {/* Avatar */}
-            <div className="flex flex-col items-center text-center">
+      <div className="rounded-2xl md:rounded-3xl border border-white/70 bg-white/90 shadow-[0_25px_65px_rgba(15,23,42,0.08)] p-5 md:p-8 space-y-6">
+        <div className="flex flex-col gap-4 md:gap-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
               {profile.avatarUrl ? (
-                <img 
-                  src={profile.avatarUrl} 
+                <img
+                  src={profile.avatarUrl}
                   alt={name}
-                  className="h-20 w-20 md:h-24 md:w-24 rounded-2xl md:rounded-3xl object-cover border-4 border-white shadow-[0_15px_35px_rgba(15,23,42,0.15)]"
+                  className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover border-4 border-white shadow-[0_15px_35px_rgba(15,23,42,0.15)]"
                 />
               ) : (
-                <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl md:rounded-3xl bg-gradient-to-br from-indigo-500/70 to-purple-500/70 flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-[0_15px_35px_rgba(99,102,241,0.45)]">
-                  {name.charAt(0).toUpperCase()}
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-slate-100 flex items-center justify-center text-4xl text-slate-400">
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 1116 0H4z" />
+                  </svg>
                 </div>
               )}
-              {/* Username size reduced & long names wrapped for better readability */}
-              <h2 className="mt-3 md:mt-4 text-lg md:text-xl font-bold break-all leading-snug text-slate-900">{name}</h2>
-              <p className="text-xs md:text-sm font-medium text-slate-500">@{email.split("@")[0]}</p>
-              
-              {/* Verification Badges */}
-              <div className="flex gap-2 mt-2">
-                <VerifiedBadge type="email" size="sm" />
-                {profile.phoneVerified && <VerifiedBadge type="phone" size="sm" />}
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{name}</h1>
+                <p className="text-sm md:text-base text-slate-500">{email}</p>
+                <p className="text-sm text-slate-500">Member since {memberYear}</p>
               </div>
             </div>
 
-            {/* Rating Display */}
-            {profile.totalRatings > 0 && (
-              <div className="rounded-xl md:rounded-2xl border border-amber-100 bg-amber-50/70 px-3 md:px-4 py-2 md:py-3">
-                <div className="flex items-center justify-center gap-2 md:gap-3 text-amber-900 flex-wrap">
-                  <div className="flex text-base md:text-lg">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className={star <= Math.round(profile.averageRating) ? 'text-yellow-400' : 'text-yellow-200'}>
-                        ⭐
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-xl md:text-2xl font-black">{profile.averageRating.toFixed(1)}</span>
-                  <span className="text-xs md:text-sm font-semibold">
-                    ({profile.totalRatings} {profile.totalRatings === 1 ? 'rating' : 'ratings'})
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div className="space-y-2 md:space-y-3">
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="w-full rounded-xl md:rounded-2xl border border-slate-200 bg-white/80 px-3 md:px-4 py-2 md:py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-              >
-                Edit Profile
-              </button>
-              <form action="/auth/signout" method="post">
-                <button className="w-full rounded-xl md:rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 px-3 md:px-4 py-2 md:py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(15,23,42,0.35)]">
-                  Logout
-                </button>
-              </form>
-            </div>
-
-            {/* Additional Info */}
-            <div className="rounded-xl md:rounded-2xl border border-slate-100 bg-slate-50/70 p-3 md:p-4 space-y-2 md:space-y-3 text-xs md:text-sm">
-              {profile.phone && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Phone</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-900 text-xs md:text-sm">{profile.phone}</span>
-                    {profile.phoneVerified && (
-                      <span className="text-xs text-success">Verified</span>
-                    )}
-                  </div>
-                </div>
-              )}
-              {!profile.phoneVerified && (
-                <div className="rounded-lg md:rounded-xl border border-amber-200 bg-amber-50/70 p-2 md:p-3">
-                  <p className="text-xs text-amber-900 mb-2 font-semibold">
-                    📱 Verify your phone number to build trust with other users
-                  </p>
-                  <a 
-                    href="/verify-phone"
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    Verify Phone Number →
-                  </a>
-                </div>
-              )}
-              {profile.campusArea && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Campus Area</span>
-                  <span className="font-semibold text-slate-900 text-xs md:text-sm">{profile.campusArea}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-slate-500">Member Since</span>
-                <span className="font-semibold text-slate-900 text-xs md:text-sm">
-                  {new Date(profile.createdAt).getFullYear()}
-                </span>
-              </div>
-              {profile.bio && (
-                <div className="pt-1">
-                  <span className="text-slate-500 block mb-1">Bio</span>
-                  <p className="text-xs md:text-sm text-slate-900">{profile.bio}</p>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="self-start md:self-center inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition shadow-subtle"
+            >
+              Edit Profile
+            </button>
           </div>
         </div>
 
-        {/* My Listings */}
-        <div className="lg:col-span-2 lg:pl-6">
-          <div className="rounded-2xl md:rounded-3xl border border-white/70 bg-white/90 p-4 md:p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)]">
-            <div className="mb-4 md:mb-6">
-              <p className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400">inventory</p>
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900">My Listings</h2>
-              <p className="text-xs md:text-sm text-slate-500">Showcase your items and track sales in one view.</p>
-            </div>
-            {listings.length === 0 ? (
-              <div className="mt-6 md:mt-8 rounded-xl md:rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 md:px-6 py-8 md:py-12 text-center text-slate-500">
-                <p className="text-base md:text-lg font-semibold text-slate-900">No listings yet</p>
-                <p className="text-xs md:text-sm">Launch your first listing to reach other Beacons.</p>
-                <a href="/listings/new" className="mt-3 md:mt-4 inline-flex items-center justify-center rounded-xl md:rounded-2xl bg-red-600 hover:bg-red-700 px-5 md:px-6 py-2 md:py-3 text-sm font-semibold text-white shadow-lg">
-                  Create Your First Listing
-                </a>
-              </div>
-            ) : (
-              <div className="mt-4 md:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                {listings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            )}
+        <div className="border-t border-slate-200 pt-4 space-y-3">
+          <div className="pt-2">
+            <h3 className="text-xs md:text-sm font-semibold text-slate-500 uppercase tracking-[0.2em] mb-2">Bio</h3>
+            <p className="text-base md:text-lg text-slate-900">
+              {profile.bio || "Add a short bio so others can learn about you."}
+            </p>
           </div>
         </div>
       </div>
