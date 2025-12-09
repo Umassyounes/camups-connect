@@ -163,14 +163,14 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-[32rem] overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-[32rem] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-            <h3 className="font-semibold text-lg text-foreground">Notifications</h3>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+            <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-blue-600 hover:underline"
               >
                 Mark all as read
               </button>
@@ -178,13 +178,13 @@ export default function NotificationBell() {
           </div>
 
           {/* Notifications List */}
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+          <div className="flex-1 overflow-y-auto bg-white">
             {isLoading && notifications.length === 0 ? (
-              <div className="p-8 text-center text-foreground-secondary bg-white dark:bg-gray-900">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+              <div className="p-8 text-center text-gray-500 bg-white">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-foreground-secondary bg-white dark:bg-gray-900">
+              <div className="p-8 text-center text-gray-500 bg-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-12 w-12 mx-auto mb-2 opacity-50"
@@ -202,13 +202,13 @@ export default function NotificationBell() {
                 <p>No notifications yet</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-900">
+              <div className="bg-white">
                 {notifications.map(notification => (
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                      !notification.read ? 'bg-blue-50 dark:bg-blue-950/30' : 'bg-white dark:bg-gray-900'
+                    className={`w-full text-left p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                      !notification.read ? 'bg-blue-50' : 'bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -239,13 +239,13 @@ export default function NotificationBell() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${!notification.read ? 'text-foreground' : 'text-foreground-secondary'}`}>
+                        <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
                           {notification.title}
                         </p>
-                        <p className="text-sm text-foreground-secondary mt-1 line-clamp-2">
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-foreground-secondary mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           {new Date(notification.createdAt).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -270,13 +270,13 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-white dark:bg-gray-900">
+            <div className="p-3 border-t border-gray-200 text-center bg-gray-50">
               <button
                 onClick={() => {
                   setIsOpen(false);
                   router.push('/notifications');
                 }}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-blue-600 hover:underline"
               >
                 View all notifications
               </button>
