@@ -130,16 +130,17 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         return
       }
 
-      // Combine date + time into ISO format with timezone (Z for UTC)
-      const startDateTime = `${eventDate}T${startTimeStr}:00Z`
-      const endDateTime = endTimeStr ? `${eventDate}T${endTimeStr}:00Z` : null
+      // Create Date objects in local timezone, then convert to ISO
+      // This ensures the time is stored as UTC but represents the correct local time
+      const startDate = new Date(`${eventDate}T${startTimeStr}:00`)
+      const endDate = endTimeStr ? new Date(`${eventDate}T${endTimeStr}:00`) : null
 
-      // Build the payload
+      // Build the payload with ISO datetime strings
       const payload = {
         title,
         description,
-        startTime: startDateTime,
-        endTime: endDateTime,
+        startTime: startDate.toISOString(),
+        endTime: endDate ? endDate.toISOString() : null,
         location: data.location || null,
         imageUrl: imageUrl || null,
         category: data.category || null,
@@ -200,16 +201,16 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
     )
   }
 
-  // Parse the event date and time for form defaults
+  // Parse the event date and time for form defaults (in local timezone)
   const eventDateObj = new Date(event.eventDate)
-  const defaultDate = eventDateObj.toISOString().split("T")[0]
+  const defaultDate = eventDateObj.toLocaleDateString('en-CA') // YYYY-MM-DD format
   
-  // Extract time from startTime ISO string
+  // Extract time from startTime in local timezone
   const startTimeObj = new Date(event.startTime)
-  const defaultStartTime = startTimeObj.toISOString().substring(11, 16) // HH:MM
+  const defaultStartTime = startTimeObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) // HH:MM
   
   const defaultEndTime = event.endTime 
-    ? new Date(event.endTime).toISOString().substring(11, 16)
+    ? new Date(event.endTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
     : ""
 
   return (
@@ -388,14 +389,14 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
           <button
             type="button"
             onClick={() => router.push(`/events/${eventId}`)}
-            className="flex-1 bg-background-secondary text-foreground py-3 rounded-lg hover:bg-border font-medium transition"
+            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 font-medium transition"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover disabled:opacity-50 font-medium transition shadow-subtle"
+            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium transition shadow-md"
           >
             {loading ? "Updating Event..." : "Update Event"}
           </button>

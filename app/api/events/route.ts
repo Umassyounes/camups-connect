@@ -80,31 +80,34 @@ export async function POST(req: NextRequest) {
 
     const { title, description, startTime, endTime, location, imageUrl, capacity, category } = validation.data
 
-    // Convert ISO datetime string to Date for eventDate
+    // Parse the ISO datetime string
     const eventDate = new Date(startTime)
     
-    // Ensure event is not in the past
-    if (eventDate < new Date()) {
+    // Ensure event is not in the past (allow a 5-minute buffer for form submission time)
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - 5) // Allow 5 minute grace period
+    if (eventDate < now) {
       return NextResponse.json({ error: "Event date must be in the future" }, { status: 400 })
     }
     
     const supabase = await sbServer()
-    const now = new Date().toISOString()
+    const nowISO = new Date().toISOString()
+    
     const { data: event, error } = await supabase
       .from('Event')
       .insert({
         title,
         description,
-        eventDate: eventDate.toISOString(),
-        startTime: eventDate.toISOString(),
-        endTime: endTime || null,
+        eventDate: startTime, // Already in ISO format from frontend
+        startTime: startTime, // Already in ISO format from frontend
+        endTime: endTime || null, // Already in ISO format from frontend
         location: location || "",
         imageUrl: imageUrl || null,
         capacity: capacity || null,
         category: category || null,
         organizerId: user.id,
-        createdAt: now,
-        updatedAt: now
+        createdAt: nowISO,
+        updatedAt: nowISO
       })
       .select(`
         *,

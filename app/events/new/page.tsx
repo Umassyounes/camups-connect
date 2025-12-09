@@ -73,16 +73,17 @@ export default function NewEventPage() {
         return
       }
 
-      // Combine date + time into ISO format with timezone (Z for UTC)
-      const startDateTime = `${eventDate}T${startTimeStr}:00Z`
-      const endDateTime = endTimeStr ? `${eventDate}T${endTimeStr}:00Z` : null
+      // Create Date objects in local timezone, then convert to ISO
+      // This ensures the time is stored as UTC but represents the correct local time
+      const startDate = new Date(`${eventDate}T${startTimeStr}:00`)
+      const endDate = endTimeStr ? new Date(`${eventDate}T${endTimeStr}:00`) : null
 
-      // Build the payload with combined datetime fields
+      // Build the payload with ISO datetime strings (includes timezone offset)
       const payload = {
         title: data.title,
         description: data.description,
-        startTime: startDateTime,
-        endTime: endDateTime,
+        startTime: startDate.toISOString(),
+        endTime: endDate ? endDate.toISOString() : null,
         location: data.location || null,
         imageUrl: data.imageUrl || null,
         category: data.category || null,

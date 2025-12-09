@@ -5,6 +5,21 @@ import { useRealtimeMessages } from "@/lib/hooks/useRealtimeMessages"
 import { validateAudioFile, validateFileSize, validateImageFile } from "@/lib/validation"
 import ReportButton from "@/components/ReportButton"
 
+// Helper function for relative time formatting
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  
+  if (diffInSeconds < 60) return 'Just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`
+  
+  // For older messages, show the date
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 type Conversation = {
   id: number
   otherUser: {
@@ -104,7 +119,16 @@ function MessagesPageInner() {
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault()
-    if (!selectedConversationId || !newMessage.trim() || sending) return
+    if (!selectedConversationId || sending) return
+
+    // If there's a photo selected, send the photo instead
+    if (selectedPhoto) {
+      await sendPhoto()
+      return
+    }
+
+    // If there's no text, don't send
+    if (!newMessage.trim()) return
 
     setSending(true)
     // Force scroll to bottom when sending a message
@@ -176,19 +200,21 @@ function MessagesPageInner() {
         throw new Error('Failed to upload photo')
       }
 
-      // Send message with photo URL
+      // Send message with photo URL and optional text content
       const res = await fetch(`/api/messages/${selectedConversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messageType: 'PHOTO',
-          mediaUrl: uploadData.data.url
+          mediaUrl: uploadData.data.url,
+          content: newMessage.trim() || undefined  // Include text if provided
         })
       })
 
       if (res.ok) {
-        // Clear preview and selection
+        // Clear preview, selection, and message text
         cancelPhoto()
+        setNewMessage("")
       }
     } catch (error) {
       console.error('Photo upload failed:', error)
@@ -349,10 +375,10 @@ function MessagesPageInner() {
   }
 
   return (
-    <div className="w-full flex flex-col pb-20 md:pb-0 px-3 md:px-0">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4" style={{ minHeight: 'calc(100vh - 180px)' }}>
+    <div className="w-full flex flex-col pb-20 md:pb-0 px-3 md:px-0 h-[calc(100vh-120px)] md:h-[calc(100vh-140px)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 h-full min-h-0">
         {/* Conversations List */}
-        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} md:col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden`} style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} md:col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden h-full`}>
           <div className="p-3 md:p-4 border-b border-border flex-shrink-0">
             <h2 className="text-lg md:text-xl font-bold text-foreground">Messages</h2>
           </div>
@@ -363,41 +389,63 @@ function MessagesPageInner() {
               <p className="text-xs md:text-sm mt-2">Start chatting by viewing a listing</p>
             </div>
           ) : (
-            <div className="divide-y divide-border overflow-y-auto flex-1">
+            <div className="divide-y divide-border overflow-y-auto flex-1 min-h-0">
               {conversations.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => setSelectedConversationId(conv.id)}
-                  className={`w-full p-3 md:p-4 text-left hover:bg-[var(--background-elevated)] transition ${
-                    selectedConversationId === conv.id ? 'bg-primary/10' : ''
+                  className={`w-full p-3 md:p-4 text-left hover:bg-[var(--background-elevated)] transition-colors ${
+                    selectedConversationId === conv.id ? 'bg-primary/10 border-l-2 border-l-primary' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-2 md:gap-3">
-                    {conv.otherUser.avatarUrl ? (
-                      <img 
-                        src={conv.otherUser.avatarUrl} 
-                        alt={conv.otherUser.name || 'User'}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0 text-sm md:text-base">
-                        {(conv.otherUser.name || 'U').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold truncate text-foreground text-sm md:text-base">{conv.otherUser.name || 'User'}</p>
-                        {conv.unreadCount > 0 && (
-                          <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 md:py-1">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      {conv.lastMessage && (
-                        <p className="text-xs md:text-sm text-foreground-secondary truncate">
-                          {conv.lastMessage.content}
-                        </p>
+                  <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="relative flex-shrink-0">
+                      {conv.otherUser.avatarUrl ? (
+                        <img 
+                          src={conv.otherUser.avatarUrl} 
+                          alt={conv.otherUser.name || 'User'}
+                          className="w-11 h-11 md:w-12 md:h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-base md:text-lg">
+                          {(conv.otherUser.name || 'U').charAt(0).toUpperCase()}
+                        </div>
                       )}
+                      {/* Online indicator placeholder - could be used later */}
+                      {conv.unreadCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-[var(--card-bg)]" />
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`font-semibold truncate text-sm md:text-base ${conv.unreadCount > 0 ? 'text-foreground' : 'text-foreground'}`}>
+                          {conv.otherUser.name || 'User'}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {conv.lastMessage && (
+                            <span className="text-[10px] md:text-xs text-foreground-secondary">
+                              {formatRelativeTime(conv.lastMessage.createdAt)}
+                            </span>
+                          )}
+                          {conv.unreadCount > 0 && (
+                            <span className="bg-primary text-white text-[10px] md:text-xs font-medium rounded-full min-w-[18px] h-[18px] md:min-w-[20px] md:h-[20px] flex items-center justify-center px-1">
+                              {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className={`text-xs md:text-sm truncate mt-0.5 ${conv.unreadCount > 0 ? 'text-foreground-secondary font-medium' : 'text-foreground-secondary/70'}`}>
+                        {conv.lastMessage ? (
+                          conv.lastMessage.content.startsWith('[Image]') || conv.lastMessage.content.startsWith('[Audio]') 
+                            ? conv.lastMessage.content 
+                            : conv.lastMessage.content
+                        ) : (
+                          <span className="italic">No messages yet</span>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -407,11 +455,17 @@ function MessagesPageInner() {
         </div>
 
         {/* Messages Thread */}
-        <div className={`${selectedConversationId ? 'block' : 'hidden md:block'} md:col-span-2 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col`} style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <div className={`${selectedConversationId ? 'block' : 'hidden md:block'} md:col-span-2 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col h-full overflow-hidden`}>
           {!selectedConversation ? (
             <div className="flex-1 flex items-center justify-center text-foreground-secondary">
               <div className="text-center px-4">
-                <p className="text-sm md:text-lg">Select a conversation to start messaging</p>
+                <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <svg className="w-8 h-8 md:w-10 md:h-10 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-base md:text-lg font-medium text-foreground mb-1">Select a conversation</p>
+                <p className="text-xs md:text-sm text-foreground-secondary">Choose a chat from the list to start messaging</p>
               </div>
             </div>
           ) : (
@@ -447,7 +501,7 @@ function MessagesPageInner() {
               <div 
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4"
+                className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 min-h-0"
               >
                 {messagesLoading ? (
                   <div className="text-center text-foreground-secondary text-sm md:text-base">Loading messages...</div>
@@ -546,70 +600,68 @@ function MessagesPageInner() {
 
               {/* Photo Preview */}
               {photoPreview && (
-                <div className="p-3 md:p-4 border-t bg-gray-50">
-                  <div className="flex items-end gap-2 md:gap-3">
-                    <div className="relative">
+                <div className="p-3 md:p-4 border-t border-border bg-[var(--background-elevated)]">
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-shrink-0">
                       <img 
                         src={photoPreview} 
                         alt="Preview" 
-                        className="max-h-24 md:max-h-32 rounded-lg border-2 border-blue-500"
+                        className="h-16 w-16 md:h-20 md:w-20 rounded-lg object-cover border-2 border-primary"
                       />
                       <button
                         type="button"
                         onClick={cancelPhoto}
-                        className="absolute -top-2 -right-2 bg-error text-white rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center hover:bg-error-dark transition shadow-lg text-xs md:text-sm"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center hover:bg-red-600 transition shadow-lg text-xs"
                       >
                         ✕
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={sendPhoto}
-                      disabled={uploading}
-                      className="bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle text-sm md:text-base"
-                    >
-                      {uploading ? 'Sending...' : 'Send Photo'}
-                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Photo attached</p>
+                      <p className="text-xs text-foreground-secondary mt-0.5">Add a message below and press Send</p>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Voice Recording Preview */}
               {audioBlob && !isRecording && (
-                <div className="p-3 md:p-4 border-t bg-gray-50">
+                <div className="p-3 md:p-4 border-t border-border bg-[var(--background-elevated)]">
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
                     <audio controls src={URL.createObjectURL(audioBlob)} className="flex-1 w-full" />
-                    <button
-                      type="button"
-                      onClick={cancelVoiceMessage}
-                      className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-border hover:bg-[var(--background-elevated)] hover:border-primary transition-all text-sm md:text-base"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={sendVoiceMessage}
-                      disabled={uploading}
-                      className="bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 transition shadow-subtle text-sm md:text-base"
-                    >
-                      {uploading ? 'Sending...' : 'Send Voice'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelVoiceMessage}
+                        className="flex-1 sm:flex-none px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-border hover:bg-[var(--background-elevated)] text-foreground transition text-sm md:text-base"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={sendVoiceMessage}
+                        disabled={uploading}
+                        className="flex-1 sm:flex-none bg-blue-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-md font-medium text-sm md:text-base"
+                      >
+                        {uploading ? 'Sending...' : 'Send Voice'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Recording Indicator */}
               {isRecording && (
-                <div className="p-3 md:p-4 border-t bg-red-50">
+                <div className="p-3 md:p-4 border-t border-border bg-red-50 dark:bg-red-900/20">
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="flex items-center gap-2 flex-1">
                       <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-red-600 font-medium text-xs md:text-sm">Recording... {formatTime(recordingTime)}</span>
+                      <span className="text-red-600 dark:text-red-400 font-medium text-xs md:text-sm">Recording... {formatTime(recordingTime)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={stopRecording}
-                      className="bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-red-700 text-sm md:text-base"
+                      className="bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-red-700 font-medium text-sm md:text-base"
                     >
                       Stop
                     </button>
@@ -664,13 +716,13 @@ function MessagesPageInner() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder={uploading ? "Uploading..." : isRecording ? "Recording..." : "Type a message..."}
+                    placeholder={uploading ? "Uploading..." : isRecording ? "Recording..." : selectedPhoto ? "Add a caption (optional)..." : "Type a message..."}
                     className="flex-1 rounded-lg border dark:border-gray-700 px-3 md:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400 text-sm md:text-base"
                     disabled={sending || uploading || isRecording}
                   />
                   <button
                     type="submit"
-                    disabled={!newMessage.trim() || sending || uploading || isRecording}
+                    disabled={(!newMessage.trim() && !selectedPhoto) || sending || uploading || isRecording}
                     className="bg-blue-600 text-white px-3 md:px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm md:text-base"
                   >
                     <span className="hidden sm:inline">{sending ? 'Sending...' : uploading ? 'Uploading...' : 'Send'}</span>
