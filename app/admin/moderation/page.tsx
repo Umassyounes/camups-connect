@@ -4,6 +4,7 @@ export const runtime = 'nodejs'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface FlaggedContentItem {
   id: number
@@ -17,6 +18,20 @@ interface FlaggedContentItem {
   details: any
   createdAt: string
   user?: {
+    id: number
+    name: string | null
+  }
+}
+
+interface ModerationLogItem {
+  id: number
+  adminId: number
+  action: string
+  targetType: string
+  targetId: number
+  details: any
+  createdAt: string
+  admin?: {
     id: number
     name: string | null
   }
@@ -37,6 +52,7 @@ interface Stats {
   }
   severity: Record<string, number>
   contentType: Record<string, number>
+  recentActions?: ModerationLogItem[]
 }
 
 export default function AdminModerationPage() {
@@ -50,6 +66,7 @@ export default function AdminModerationPage() {
   const [selectedItem, setSelectedItem] = useState<FlaggedContentItem | null>(null)
   const [reviewNotes, setReviewNotes] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [activeTab, setActiveTab] = useState<'flags' | 'reports' | 'log'>('flags')
 
   useEffect(() => {
     fetchData()
@@ -129,38 +146,59 @@ export default function AdminModerationPage() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'low': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
+  }
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   if (loading && !stats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading admin dashboard...</p>
+        <p className="text-lg text-foreground">Loading admin dashboard...</p>
       </div>
     )
   }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">
-          🛡️ Moderation Dashboard
-        </h1>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <Link
+            href="/admin"
+            className="text-primary hover:underline mb-2 inline-block"
+          >
+            ← Back to Admin Dashboard
+          </Link>
+          <h1 className="text-3xl font-bold text-foreground">
+            🛡️ Moderation Dashboard
+          </h1>
+          <p className="text-foreground-secondary">
+            Review flagged content, user reports, and moderation history.
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => router.push('/admin/users')}
-            className="px-4 py-2 border border-border text-sm font-medium rounded-md hover:bg-background-secondary transition-colors"
+            className="px-4 py-2 border border-border text-sm font-medium rounded-md hover:bg-background-secondary transition-colors text-foreground"
           >
             User Management
           </button>
           <button
             onClick={() => router.push('/admin/prohibited-items')}
-            className="px-4 py-2 bg-gray-800 !text-white rounded-md hover:bg-gray-700 transition-colors font-medium"
+            className="px-4 py-2 bg-foreground text-background rounded-md hover:opacity-90 transition-colors font-medium"
           >
             Manage Prohibited Items
           </button>
@@ -169,134 +207,278 @@ export default function AdminModerationPage() {
 
       {/* Stats Overview */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-blue-600">{stats.overview.pendingFlags}</div>
-            <div className="text-sm text-gray-600">Pending Flags</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.overview.pendingFlags}</div>
+            <div className="text-sm text-foreground-secondary">Pending Flags</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-red-600">{stats.overview.deletedContent}</div>
-            <div className="text-sm text-gray-600">Deleted Content</div>
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.overview.deletedContent}</div>
+            <div className="text-sm text-foreground-secondary">Deleted Content</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-orange-600">{stats.overview.activeStrikes}</div>
-            <div className="text-sm text-gray-600">Active Strikes</div>
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.overview.activeStrikes}</div>
+            <div className="text-sm text-foreground-secondary">Active Strikes</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-purple-600">{stats.overview.suspendedUsers}</div>
-            <div className="text-sm text-gray-600">Suspended Users</div>
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.overview.suspendedUsers}</div>
+            <div className="text-sm text-foreground-secondary">Suspended Users</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-green-600">{stats.overview.flagsToday}</div>
-            <div className="text-sm text-gray-600">Flags Today</div>
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.overview.pendingReports}</div>
+            <div className="text-sm text-foreground-secondary">Pending Reports</div>
+          </div>
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.overview.flagsToday}</div>
+            <div className="text-sm text-foreground-secondary">Flags Today</div>
           </div>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
-            >
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="deleted">Deleted</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Severity</label>
-            <select
-              value={severityFilter}
-              onChange={(e) => setSeverityFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
-            >
-              <option value="">All</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Content Type</label>
-            <select
-              value={contentTypeFilter}
-              onChange={(e) => setContentTypeFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
-            >
-              <option value="">All</option>
-              <option value="listing">Listings</option>
-              <option value="message">Messages</option>
-              <option value="profile">Profiles</option>
-              <option value="event">Events</option>
-            </select>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <div className="border-b border-border">
+        <nav className="flex gap-4">
+          <button
+            onClick={() => setActiveTab('flags')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'flags'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-foreground-secondary hover:text-foreground'
+            }`}
+          >
+            Flagged Content ({flaggedContent.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'reports'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-foreground-secondary hover:text-foreground'
+            }`}
+          >
+            User Reports ({stats?.overview.totalReports || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab('log')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'log'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-foreground-secondary hover:text-foreground'
+            }`}
+          >
+            Moderation Log
+          </button>
+        </nav>
       </div>
 
-      {/* Flagged Content List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Flagged Content Queue ({flaggedContent.length})</h2>
-        </div>
-        
-        <div className="divide-y">
-          {flaggedContent.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              No flagged content found with current filters
+      {/* Flagged Content Tab */}
+      {activeTab === 'flags' && (
+        <>
+          {/* Filters */}
+          <div className="bg-card p-4 rounded-lg border border-border shadow-sm space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                >
+                  <option value="">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="deleted">Deleted</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Severity</label>
+                <select
+                  value={severityFilter}
+                  onChange={(e) => setSeverityFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                >
+                  <option value="">All</option>
+                  <option value="critical">Critical</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Content Type</label>
+                <select
+                  value={contentTypeFilter}
+                  onChange={(e) => setContentTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                >
+                  <option value="">All</option>
+                  <option value="listing">Listings</option>
+                  <option value="message">Messages</option>
+                  <option value="profile">Profiles</option>
+                  <option value="event">Events</option>
+                </select>
+              </div>
             </div>
-          ) : (
-            flaggedContent.map((item) => (
-              <div key={item.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(item.severity)}`}>
-                        {item.severity.toUpperCase()}
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100">
-                        {item.contentType}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Source: {item.source}
-                      </span>
-                    </div>
-                    <div className="font-medium text-gray-900 mb-1">
-                      {item.reason}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      User: {item.user?.name || 'Unknown'} (ID: {item.userId}) • 
-                      Content ID: {item.contentId} • 
-                      {new Date(item.createdAt).toLocaleDateString()}
+          </div>
+
+          {/* Flagged Content List */}
+          <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground">Flagged Content Queue ({flaggedContent.length})</h2>
+            </div>
+            
+            <div className="divide-y divide-border">
+              {flaggedContent.length === 0 ? (
+                <div className="p-8 text-center text-foreground-secondary">
+                  No flagged content found with current filters
+                </div>
+              ) : (
+                flaggedContent.map((item) => (
+                  <div key={item.id} className="p-4 hover:bg-background-secondary/50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(item.severity)}`}>
+                            {item.severity.toUpperCase()}
+                          </span>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-background-secondary text-foreground-secondary">
+                            {item.contentType}
+                          </span>
+                          <span className="text-xs text-foreground-secondary">
+                            Source: {item.source}
+                          </span>
+                        </div>
+                        <div className="font-medium text-foreground mb-1">
+                          {item.reason}
+                        </div>
+                        <div className="text-sm text-foreground-secondary">
+                          User: {item.user?.name || 'Unknown'} (ID: {item.userId}) • 
+                          Content ID: {item.contentId} • 
+                          {formatDate(item.createdAt)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover text-sm transition-colors"
+                      >
+                        Review
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-                  >
-                    Review
-                  </button>
-                </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* User Reports Tab */}
+      {activeTab === 'reports' && (
+        <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-xl font-semibold text-foreground">User Reports</h2>
+            <p className="text-sm text-foreground-secondary mt-1">Reports submitted by users about problematic content or behavior</p>
+          </div>
+          
+          <div className="p-6">
+            {stats?.overview.totalReports === 0 ? (
+              <div className="text-center py-8 text-foreground-secondary">
+                <div className="text-4xl mb-4">📭</div>
+                <p>No user reports have been submitted yet.</p>
+                <p className="text-sm mt-2">Reports from users will appear here for review.</p>
               </div>
-            ))
-          )}
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-background-secondary rounded-lg p-4">
+                    <div className="text-2xl font-bold text-foreground">{stats?.overview.totalReports || 0}</div>
+                    <div className="text-sm text-foreground-secondary">Total Reports</div>
+                  </div>
+                  <div className="bg-background-secondary rounded-lg p-4">
+                    <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats?.overview.pendingReports || 0}</div>
+                    <div className="text-sm text-foreground-secondary">Pending Review</div>
+                  </div>
+                  <div className="bg-background-secondary rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{(stats?.overview.totalReports || 0) - (stats?.overview.pendingReports || 0)}</div>
+                    <div className="text-sm text-foreground-secondary">Resolved</div>
+                  </div>
+                </div>
+                <p className="text-sm text-foreground-secondary">
+                  User reports are automatically converted to flagged content items. 
+                  View them in the &quot;Flagged Content&quot; tab filtered by source: user_report.
+                </p>
+                <button
+                  onClick={() => {
+                    setActiveTab('flags')
+                    setStatusFilter('pending')
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
+                >
+                  View Pending Reports in Queue
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Moderation Log Tab */}
+      {activeTab === 'log' && (
+        <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-xl font-semibold text-foreground">Moderation Activity Log</h2>
+            <p className="text-sm text-foreground-secondary mt-1">Audit trail of all admin and moderator actions</p>
+          </div>
+          
+          <div className="divide-y divide-border">
+            {!stats?.recentActions || stats.recentActions.length === 0 ? (
+              <div className="p-8 text-center text-foreground-secondary">
+                <div className="text-4xl mb-4">📋</div>
+                <p>No moderation actions recorded yet.</p>
+                <p className="text-sm mt-2">Actions like content deletion, user suspension, and reviews will be logged here.</p>
+              </div>
+            ) : (
+              stats.recentActions.map((action) => (
+                <div key={action.id} className="p-4 hover:bg-background-secondary/50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-foreground">
+                          {action.admin?.name || 'Admin'}
+                        </span>
+                        <span className="text-foreground-secondary">performed</span>
+                        <span className="px-2 py-0.5 bg-background-secondary rounded text-sm font-mono text-foreground">
+                          {action.action}
+                        </span>
+                      </div>
+                      <div className="text-sm text-foreground-secondary">
+                        Target: {action.targetType} #{action.targetId}
+                        {action.details && (
+                          <span className="ml-2 text-xs">
+                            • {typeof action.details === 'string' ? action.details : JSON.stringify(action.details).slice(0, 50)}...
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-foreground-secondary">
+                      {formatDate(action.createdAt)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Review Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4">Review Flagged Content</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border border-border">
+            <h3 className="text-xl font-semibold mb-4 text-foreground">Review Flagged Content</h3>
             
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-6 text-foreground">
               <div>
                 <span className="font-medium">Content Type:</span> {selectedItem.contentType}
               </div>
@@ -317,18 +499,18 @@ export default function AdminModerationPage() {
               </div>
               <div>
                 <span className="font-medium">Details:</span>
-                <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto">
+                <pre className="mt-1 p-2 bg-background-secondary rounded text-xs overflow-auto text-foreground-secondary">
                   {JSON.stringify(selectedItem.details, null, 2)}
                 </pre>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="block font-medium mb-2">Review Notes</label>
+              <label className="block font-medium mb-2 text-foreground">Review Notes</label>
               <textarea
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                 rows={3}
                 placeholder="Add notes about your decision..."
               />
@@ -337,35 +519,35 @@ export default function AdminModerationPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleReview(selectedItem.id, 'approved', false, false)}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 disabled={processing}
               >
                 ✅ Approve
               </button>
               <button
                 onClick={() => handleReview(selectedItem.id, 'rejected', false, false)}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
                 disabled={processing}
               >
                 ⚠️ Reject
               </button>
               <button
                 onClick={() => handleReview(selectedItem.id, 'rejected', false, true)}
-                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
                 disabled={processing}
               >
                 🚨 Reject + Strike
               </button>
               <button
                 onClick={() => handleReview(selectedItem.id, 'deleted', true, true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 disabled={processing}
               >
                 🗑️ Delete + Strike
               </button>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md hover:bg-background-secondary text-foreground transition-colors"
                 disabled={processing}
               >
                 Cancel

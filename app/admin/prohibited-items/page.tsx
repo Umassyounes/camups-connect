@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface ProhibitedItem {
   id: number
@@ -157,11 +158,11 @@ export default function ProhibitedItemsPage() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'low': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
@@ -169,17 +170,20 @@ export default function ProhibitedItemsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <button
-            onClick={() => router.back()}
-            className="text-blue-600 hover:underline mb-2"
+          <Link
+            href="/admin"
+            className="text-primary hover:underline mb-2 inline-block"
           >
-            ← Back to Dashboard
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">
+            ← Back to Admin Dashboard
+          </Link>
+          <h1 className="text-3xl font-bold text-foreground">
             🚫 Prohibited Items Management
           </h1>
+          <p className="text-foreground-secondary">
+            Manage banned keywords, phrases, and patterns for content filtering.
+          </p>
         </div>
         <button
           onClick={() => {
@@ -193,21 +197,21 @@ export default function ProhibitedItemsPage() {
             })
             setShowAddModal(true)
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
         >
           + Add New Item
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow space-y-4">
+      <div className="bg-card p-4 rounded-lg border border-border shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Type</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Type</label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
             >
               <option value="">All Types</option>
               <option value="keyword">Keyword</option>
@@ -216,11 +220,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Severity</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Severity</label>
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
             >
               <option value="">All Severities</option>
               <option value="critical">Critical</option>
@@ -230,11 +234,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Category</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Category</label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
             >
               <option value="">All Categories</option>
               {uniqueCategories.map(cat => (
@@ -243,11 +247,11 @@ export default function ProhibitedItemsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900">Status</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Status</label>
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
             >
               <option value="">All</option>
               <option value="true">Active</option>
@@ -258,41 +262,41 @@ export default function ProhibitedItemsPage() {
       </div>
 
       {/* Items List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Prohibited Items ({items.length})</h2>
+      <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">Prohibited Items ({items.length})</h2>
         </div>
         
         {loading ? (
-          <div className="p-8 text-center">Loading...</div>
+          <div className="p-8 text-center text-foreground-secondary">Loading...</div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-foreground-secondary">
             No prohibited items found with current filters
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-background-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pattern</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Pattern</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Severity</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Category</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-foreground-secondary uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-border">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className="hover:bg-background-secondary/50 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-mono text-sm text-gray-900">{item.pattern}</div>
+                      <div className="font-mono text-sm text-foreground">{item.pattern}</div>
                       {item.description && (
-                        <div className="text-xs text-gray-500 mt-1">{item.description}</div>
+                        <div className="text-xs text-foreground-secondary mt-1">{item.description}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded">
+                      <span className="px-2 py-1 text-xs font-medium bg-background-secondary text-foreground-secondary rounded">
                         {item.type}
                       </span>
                     </td>
@@ -301,14 +305,14 @@ export default function ProhibitedItemsPage() {
                         {item.severity}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.category}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{item.category}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => handleToggleActive(item)}
-                        className={`px-2 py-1 text-xs font-medium rounded ${
+                        className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                           item.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                         }`}
                       >
                         {item.isActive ? 'Active' : 'Inactive'}
@@ -318,13 +322,13 @@ export default function ProhibitedItemsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => openEditModal(item)}
-                          className="text-blue-600 hover:underline text-sm"
+                          className="text-primary hover:underline text-sm"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:underline text-sm"
+                          className="text-red-600 dark:text-red-400 hover:underline text-sm"
                         >
                           Delete
                         </button>
@@ -340,30 +344,30 @@ export default function ProhibitedItemsPage() {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-lg w-full p-6 border border-border">
+            <h3 className="text-xl font-semibold mb-4 text-foreground">
               {editingItem ? 'Edit Prohibited Item' : 'Add Prohibited Item'}
             </h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Pattern *</label>
+                <label className="block text-sm font-medium mb-1 text-foreground">Pattern *</label>
                 <input
                   type="text"
                   value={formData.pattern}
                   onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                   placeholder="e.g., weapon, drugs, scam"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Type *</label>
+                <label className="block text-sm font-medium mb-1 text-foreground">Type *</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                 >
                   <option value="keyword">Keyword</option>
                   <option value="phrase">Phrase</option>
@@ -372,11 +376,11 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Severity *</label>
+                <label className="block text-sm font-medium mb-1 text-foreground">Severity *</label>
                 <select
                   value={formData.severity}
                   onChange={(e) => setFormData({ ...formData, severity: e.target.value as any })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -386,12 +390,12 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Category *</label>
+                <label className="block text-sm font-medium mb-1 text-foreground">Category *</label>
                 <input
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                   placeholder="e.g., Weapons, Drugs, Scams"
                   list="categories"
                 />
@@ -403,11 +407,11 @@ export default function ProhibitedItemsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Description</label>
+                <label className="block text-sm font-medium mb-1 text-foreground">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                   rows={2}
                   placeholder="Optional description..."
                 />
@@ -417,7 +421,7 @@ export default function ProhibitedItemsPage() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={handleSubmit}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
               >
                 {editingItem ? 'Update' : 'Add'}
               </button>
@@ -426,7 +430,7 @@ export default function ProhibitedItemsPage() {
                   setShowAddModal(false)
                   setEditingItem(null)
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md hover:bg-background-secondary text-foreground transition-colors"
               >
                 Cancel
               </button>

@@ -103,6 +103,20 @@ export default function NotificationBell() {
     }
   };
 
+  // Clear all notifications
+  const clearAllNotifications = async () => {
+    try {
+      await fetch('/api/notifications?all=true', {
+        method: 'DELETE',
+      });
+      
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error clearing all notifications:', error);
+    }
+  };
+
   // Handle notification click
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
@@ -167,14 +181,24 @@ export default function NotificationBell() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
             <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Mark all as read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAllNotifications}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Notifications List */}

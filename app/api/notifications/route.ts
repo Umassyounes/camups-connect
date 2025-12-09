@@ -150,3 +150,54 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+// DELETE /api/notifications - Delete notifications
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+    const { user } = authResult;
+
+    const { searchParams } = new URL(req.url);
+    const deleteAll = searchParams.get('all') === 'true';
+    const notificationId = searchParams.get('id');
+
+    const supabase = await sbServer();
+
+    if (deleteAll) {
+      // Delete all user's notifications
+      const { error } = await supabase
+        .from('Notification')
+        .delete()
+        .eq('userId', user.id);
+
+      if (error) {
+        console.error('Error deleting all notifications:', error);
+        return NextResponse.json({ error: 'Failed to delete notifications' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'All notifications deleted' });
+    }
+
+    if (notificationId) {
+      // Delete specific notification
+      const { error } = await supabase
+        .from('Notification')
+        .delete()
+        .eq('id', parseInt(notificationId))
+        .eq('userId', user.id);
+
+      if (error) {
+        console.error('Error deleting notification:', error);
+        return NextResponse.json({ error: 'Failed to delete notification' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Notification deleted' });
+    }
+
+    return NextResponse.json({ error: 'Must provide notification id or all=true' }, { status: 400 });
+  } catch (error) {
+    console.error('Error in DELETE /api/notifications:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

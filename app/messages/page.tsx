@@ -1,6 +1,7 @@
 "use client"
 import { Suspense, useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { useRealtimeMessages } from "@/lib/hooks/useRealtimeMessages"
 import { validateAudioFile, validateFileSize, validateImageFile } from "@/lib/validation"
 import ReportButton from "@/components/ReportButton"
@@ -481,20 +482,22 @@ function MessagesPageInner() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                {selectedConversation.otherUser.avatarUrl ? (
-                  <img 
-                    src={selectedConversation.otherUser.avatarUrl} 
-                    alt={selectedConversation.otherUser.name || 'User'}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm md:text-base">
-                    {(selectedConversation.otherUser.name || 'U').charAt(0).toUpperCase()}
+                <Link href={`/profile/${selectedConversation.otherUser.id}`} className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition">
+                  {selectedConversation.otherUser.avatarUrl ? (
+                    <img 
+                      src={selectedConversation.otherUser.avatarUrl} 
+                      alt={selectedConversation.otherUser.name || 'User'}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm md:text-base">
+                      {(selectedConversation.otherUser.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm md:text-base hover:text-primary transition">{selectedConversation.otherUser.name || 'User'}</h3>
                   </div>
-                )}
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm md:text-base">{selectedConversation.otherUser.name || 'User'}</h3>
-                </div>
+                </Link>
               </div>
 
               {/* Messages */}

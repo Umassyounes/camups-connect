@@ -67,13 +67,13 @@ export default async function AdminDashboardPage() {
   const tools = [
     {
       title: 'User Management',
-      description: 'Review accounts, promote admins, and handle suspensions.',
+      description: 'Review accounts, manage roles, and handle suspensions.',
       href: '/admin/users',
       action: 'Open user management',
     },
     {
       title: 'Moderation Queue',
-      description: 'Process flagged content and manage strikes.',
+      description: 'Process flagged content, user reports, and manage strikes.',
       href: '/admin/moderation',
       action: 'Manage moderation',
     },

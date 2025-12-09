@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface AdminUserRow {
   id: number;
@@ -15,7 +16,14 @@ interface AdminUserRow {
   transactionsCount: number;
 }
 
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+}
+
 const SEARCH_DEBOUNCE_MS = 300;
+const USERS_PER_PAGE = 25;
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -29,6 +37,8 @@ export default function AdminUsersPage() {
   const [currentAdminId, setCurrentAdminId] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
+  const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: USERS_PER_PAGE });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -49,6 +59,8 @@ export default function AdminUsersPage() {
         if (debouncedSearch) params.set('search', debouncedSearch);
         if (roleFilter) params.set('role', roleFilter);
         if (statusFilter) params.set('status', statusFilter);
+        params.set('page', currentPage.toString());
+        params.set('limit', USERS_PER_PAGE.toString());
 
         const res = await fetch(`/api/admin/users?${params.toString()}`);
         if (res.status === 401) {
@@ -68,6 +80,9 @@ export default function AdminUsersPage() {
         if (!isMounted) return;
         setUsers(body.data || []);
         setCurrentAdminId(body.currentAdminId ?? null);
+        if (body.pagination) {
+          setPagination(body.pagination);
+        }
       } catch (err) {
         if (!isMounted) return;
         console.error('Failed to load admin users:', err);
@@ -82,7 +97,14 @@ export default function AdminUsersPage() {
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch, roleFilter, statusFilter, refreshKey, router]);
+  }, [debouncedSearch, roleFilter, statusFilter, refreshKey, router, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, roleFilter, statusFilter]);
+
+  const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   const setUserUpdating = (userId: number, isUpdating: boolean) => {
     setUpdatingIds((prev) => {
@@ -96,8 +118,7 @@ export default function AdminUsersPage() {
     });
   };
 
-  const handleRoleToggle = async (user: AdminUserRow) => {
-    const targetRole = user.role === 'admin' ? 'user' : 'admin';
+  const handleRoleChange = async (user: AdminUserRow, targetRole: 'admin' | 'moderator' | 'user') => {
     setUserUpdating(user.id, true);
     try {
       const res = await fetch(`/api/admin/users/${user.id}`, {
@@ -123,6 +144,11 @@ export default function AdminUsersPage() {
     } finally {
       setUserUpdating(user.id, false);
     }
+  };
+
+  const handleRoleToggle = async (user: AdminUserRow) => {
+    const targetRole = user.role === 'admin' ? 'user' : 'admin';
+    await handleRoleChange(user, targetRole);
   };
 
   const handleSuspensionToggle = async (user: AdminUserRow) => {
@@ -161,6 +187,11 @@ export default function AdminUsersPage() {
     [users]
   );
 
+  const totalModerators = useMemo(
+    () => users.filter((user) => user.role === 'moderator').length,
+    [users]
+  );
+
   const totalSuspended = useMemo(
     () => users.filter((user) => user.isSuspended).length,
     [users]
@@ -182,36 +213,39 @@ export default function AdminUsersPage() {
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <button
-            onClick={() => router.push('/admin')}
-            className="text-blue-600 dark:text-blue-400 hover:underline mb-2"
+          <Link
+            href="/admin"
+            className="text-primary hover:underline mb-2 inline-block"
           >
             ← Back to Admin Dashboard
-          </button>
+          </Link>
           <h1 className="text-3xl font-bold text-foreground">👥 User Management</h1>
           <p className="text-foreground-secondary">
-            Promote admins, manage suspensions, and review platform activity.
+            Manage user roles, suspensions, and review platform activity.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setRefreshKey((key) => key + 1)}
-            className="px-4 py-2 border border-border rounded-md hover:bg-background-secondary transition-colors"
+            className="px-4 py-2 border border-border rounded-md hover:bg-background-secondary transition-colors text-foreground"
             disabled={loading}
           >
             Refresh
           </button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-lg bg-card p-4 border border-border shadow-sm">
           <div className="text-sm text-foreground-secondary">Total Visible Users</div>
           <div className="text-2xl font-semibold text-foreground mt-1">{users.length}</div>
         </div>
         <div className="rounded-lg bg-card p-4 border border-border shadow-sm">
-          <div className="text-sm text-foreground-secondary">Admins in View</div>
-          <div className="text-2xl font-semibold text-foreground mt-1">{totalAdmins}</div>
+          <div className="text-sm text-foreground-secondary">Admins</div>
+          <div className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mt-1">{totalAdmins}</div>
+        </div>
+        <div className="rounded-lg bg-card p-4 border border-border shadow-sm">
+          <div className="text-sm text-foreground-secondary">Moderators</div>
+          <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">{totalModerators}</div>
         </div>
         <div className="rounded-lg bg-card p-4 border border-border shadow-sm">
           <div className="text-sm text-foreground-secondary">Suspended Users</div>
@@ -326,7 +360,13 @@ export default function AdminUsersPage() {
                         <div className="text-xs text-foreground-secondary">User ID: {user.id}</div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="rounded-full bg-background-secondary px-2 py-1 text-xs font-medium uppercase tracking-wide text-foreground-secondary">
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium uppercase tracking-wide ${
+                          user.role === 'admin' 
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                            : user.role === 'moderator'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                              : 'bg-background-secondary text-foreground-secondary'
+                        }`}>
                           {user.role}
                         </span>
                       </td>
@@ -346,19 +386,21 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-4 text-foreground-secondary">{formatDate(user.createdAt)}</td>
                       <td className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleRoleToggle(user)}
+                          {/* Role Management Dropdown */}
+                          <select
+                            value={user.role}
                             disabled={disabling || isSelf}
-                            className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                            onChange={(e) => handleRoleChange(user, e.target.value as 'admin' | 'moderator' | 'user')}
+                            className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors bg-background ${
                               disabling || isSelf
                                 ? 'cursor-not-allowed border-border text-foreground-secondary'
-                                : user.role === 'admin'
-                                  ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-900/20'
-                                  : 'border-primary text-primary hover:bg-primary/10'
+                                : 'border-border text-foreground hover:border-primary cursor-pointer'
                             }`}
                           >
-                            {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                          </button>
+                            <option value="user">User</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="admin">Admin</option>
+                          </select>
                           <button
                             onClick={() => handleSuspensionToggle(user)}
                             disabled={disabling || isSelf}
@@ -379,6 +421,59 @@ export default function AdminUsersPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-border flex items-center justify-between">
+            <div className="text-sm text-foreground-secondary">
+              Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} users
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1 rounded-md border border-border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-background-secondary text-foreground"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={loading}
+                      className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-primary text-white'
+                          : 'border border-border hover:bg-background-secondary text-foreground'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || loading}
+                className="px-3 py-1 rounded-md border border-border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-background-secondary text-foreground"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

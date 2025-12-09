@@ -251,17 +251,21 @@ export default function ListingDetailPage({ params }: PageProps) {
 
           <div className="rounded-2xl border border-border bg-[var(--card-bg)] p-4 md:p-6 shadow-subtle">
             <div className="flex items-center gap-3">
-              {listing.seller.avatarUrl ? (
-                <img src={listing.seller.avatarUrl} alt={sellerName} className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                  {sellerName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <Link href={`/profile/${listing.seller.id}`} className="flex-shrink-0">
+                {listing.seller.avatarUrl ? (
+                  <img src={listing.seller.avatarUrl} alt={sellerName} className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-primary transition" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold hover:ring-2 hover:ring-primary transition">
+                    {sellerName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </Link>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">Seller</p>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{sellerName}</p>
+                  <Link href={`/profile/${listing.seller.id}`} className="font-medium hover:text-primary transition">
+                    {sellerName}
+                  </Link>
                   <VerifiedBadge isVerified={listing.seller.isVerified} size="sm" />
                 </div>
                 <p className="text-xs text-foreground-secondary">
