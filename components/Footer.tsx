@@ -175,9 +175,9 @@ export default function Footer() {
         <div className="border-t border-slate-200 pt-8 mb-8">
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl">ƒo"</span>
+              <span className="text-2xl"></span>
               <h3 className="font-bold text-slate-800 text-lg">Local Sponsors</h3>
-              <span className="text-2xl">ƒo"</span>
+              <span className="text-2xl"></span>
             </div>
             <p className="text-slate-600 text-sm">
               Coming Soon! We're partnering with local businesses to bring you exclusive deals and perks.
