@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface ImageCarouselProps {
   images: string[]
@@ -20,11 +21,13 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
   if (images.length === 1) {
     return (
       <div className="w-full aspect-video relative rounded-xl overflow-hidden bg-black">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={images[0]}
           alt={alt}
-          className="w-full h-full object-contain"
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-contain"
+          priority
         />
       </div>
     )
@@ -42,11 +45,13 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
     <div className="space-y-4">
       {/* Main Image */}
       <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black group">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={images[currentIndex]}
           alt={`${alt} - Image ${currentIndex + 1}`}
-          className="w-full h-full object-contain transition-opacity duration-300"
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-contain transition-opacity duration-300"
+          priority={currentIndex === 0}
         />
 
         {/* Navigation Arrows */}
@@ -102,17 +107,18 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
                 index === currentIndex
                   ? 'border-primary scale-105'
                   : 'border-border hover:border-primary/50 opacity-70 hover:opacity-100'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={image}
                 alt={`Thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             </button>
           ))}

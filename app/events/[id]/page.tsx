@@ -75,7 +75,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       const data = await res.json()
       if (data.data) {
         setCurrentUserId(data.data.id)
-        setIsAdmin(data.data.role === "ADMIN" || data.data.role === "MODERATOR")
+        const role = data.data.role?.toUpperCase()
+        setIsAdmin(role === 'ADMIN' || role === 'MODERATOR')
       }
     } catch (error) {
       console.error("Failed to fetch user:", error)

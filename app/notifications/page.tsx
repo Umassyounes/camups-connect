@@ -131,110 +131,149 @@ export default function NotificationsPage() {
     }
   };
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Notifications</h1>
-        {notifications.some(n => !n.read) && (
-          <button
-            onClick={markAllAsRead}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-          >
-            Mark All as Read
-          </button>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
+    <main className="min-h-screen pb-20 bg-[#F5F7FA]">
+      {/* Header Section */}
+      <section className="bg-white border-b border-gray-200 py-6 md:py-10">
+        <div className="mx-auto max-w-4xl px-4 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#1A202C] mb-1">
+                🔔 Notifications
+              </h1>
+              <p className="text-sm md:text-base text-[#718096]">
+                Stay updated with your latest activity
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="inline-flex items-center justify-center gap-2 bg-[#4F7CFF] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#3D6AE8] transition-all shadow-md hover:shadow-lg text-sm md:text-base"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Mark All Read ({unreadCount})
+              </button>
+            )}
+          </div>
         </div>
-      ) : notifications.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-16 w-16 mx-auto mb-4 text-foreground-secondary opacity-50"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-            />
-          </svg>
-          <p className="text-xl text-foreground-secondary">No notifications yet</p>
-          <p className="text-sm text-foreground-secondary mt-2">When you get notifications, they'll show up here</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {notifications.map(notification => (
-            <div
-              key={notification.id}
-              className={`bg-card border border-border rounded-lg p-4 hover:border-primary transition-colors ${
-                !notification.read ? 'bg-blue-50 dark:bg-blue-950/20' : ''
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                {/* Icon */}
-                <div className="flex-shrink-0 mt-1">
-                  {getNotificationIcon(notification.type)}
-                </div>
+      </section>
 
-                {/* Content */}
-                <div 
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <p className={`font-medium ${!notification.read ? 'text-foreground' : 'text-foreground-secondary'}`}>
-                    {notification.title}
-                  </p>
-                  <p className="text-sm text-foreground-secondary mt-1">
-                    {notification.message}
-                  </p>
-                  <p className="text-xs text-foreground-secondary mt-2">
-                    {new Date(notification.createdAt).toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
+      <div className="mx-auto max-w-4xl px-4 md:px-6 py-6 md:py-8">
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-[#4F7CFF] mb-4"></div>
+            <p className="text-[#718096]">Loading notifications...</p>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 md:p-12 text-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 text-[#718096]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-[#1A202C] mb-2">No notifications yet</h3>
+            <p className="text-sm md:text-base text-[#718096] max-w-md mx-auto">
+              When you get notifications, they'll show up here. Stay tuned!
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map(notification => (
+              <div
+                key={notification.id}
+                className={`bg-white border rounded-xl p-4 md:p-5 hover:shadow-md transition-all cursor-pointer ${
+                  !notification.read 
+                    ? 'border-[#4F7CFF]/30 bg-blue-50/50' 
+                    : 'border-gray-100 shadow-sm'
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <div className="flex items-start gap-3 md:gap-4">
+                  {/* Icon */}
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${
+                      !notification.read ? 'bg-[#4F7CFF]/10' : 'bg-gray-100'
+                    }`}>
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  {!notification.read && (
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`font-semibold text-sm md:text-base ${
+                        !notification.read ? 'text-[#1A202C]' : 'text-[#718096]'
+                      }`}>
+                        {notification.title}
+                      </p>
+                      {!notification.read && (
+                        <span className="flex-shrink-0 w-2 h-2 bg-[#4F7CFF] rounded-full mt-2"></span>
+                      )}
+                    </div>
+                    <p className="text-sm text-[#718096] mt-1 line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-[#A0AEC0] mt-2">
+                      {new Date(notification.createdAt).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {!notification.read && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                        className="p-2 text-[#4F7CFF] hover:bg-[#4F7CFF]/10 rounded-lg transition"
+                        title="Mark as read"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        markAsRead(notification.id);
+                        deleteNotification(notification.id);
                       }}
-                      className="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded transition"
-                      title="Mark as read"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      title="Delete"
                     >
-                      ✓
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNotification(notification.id);
-                    }}
-                    className="px-3 py-1 text-sm text-red-500 hover:bg-red-500/10 rounded transition"
-                    title="Delete"
-                  >
-                    ✕
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-
     const descriptionModeration = moderateText(description)
     if (shouldAutoReject(descriptionModeration)) {
       return NextResponse.json(

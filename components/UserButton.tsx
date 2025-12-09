@@ -6,22 +6,31 @@ export default function UserButton() {
   const [user, setUser] = useState<{ email: string; name?: string; avatarUrl?: string | null } | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const avatarCacheRef = useRef<string | null>(null) // Cache to prevent losing avatar
   
   useEffect(() => {
     const supabase = sb()
     
     // Fetch user profile with avatar
-    async function fetchUserProfile(userId: string) {
+    async function fetchUserProfile(userId: string): Promise<string | null> {
       try {
-        const res = await fetch('/api/profile')
-        const data = await res.json()
-        if (data.data) {
-          return data.data.avatarUrl
+        const res = await fetch('/api/profile', { 
+          credentials: 'include', // Important: send cookies
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.data?.avatarUrl) {
+            avatarCacheRef.current = data.data.avatarUrl // Cache the avatar
+            return data.data.avatarUrl
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch profile:', error)
+        // Silently fail - user will just see default avatar
       }
-      return null
+      // Return cached avatar if fetch failed
+      return avatarCacheRef.current
     }
     
     // Get initial session
@@ -47,10 +56,25 @@ export default function UserButton() {
         })
       } else {
         setUser(null)
+        avatarCacheRef.current = null // Clear cache on logout
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Listen for profile updates via custom event
+    const handleProfileUpdate = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const avatarUrl = await fetchUserProfile(session.user.id)
+        setUser(prev => prev ? { ...prev, avatarUrl } : null)
+      }
+    }
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('profileUpdated', handleProfileUpdate)
+    }
   }, [])
 
   // Close dropdown when clicking outside

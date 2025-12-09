@@ -109,6 +109,26 @@ export type Database = {
           proBoostCredits?: number
         }
       }
+      SavedListing: {
+        Row: {
+          id: number
+          userId: number
+          listingId: number
+          createdAt: string
+        }
+        Insert: {
+          id?: number
+          userId: number
+          listingId: number
+          createdAt?: string
+        }
+        Update: {
+          id?: number
+          userId?: number
+          listingId?: number
+          createdAt?: string
+        }
+      }
       Category: {
         Row: {
           id: number

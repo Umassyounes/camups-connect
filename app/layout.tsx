@@ -56,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <a href="/" className="hover:text-primary transition-colors">Marketplace</a>
                   <a href="/events" className="hover:text-primary transition-colors">Events</a>
                   <a href="/messages" className="hover:text-primary transition-colors">Messages</a>
+                  <a href="/reviews" className="hover:text-primary transition-colors">Reviews</a>
                   <div className="relative group">
                     <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 hover:bg-slate-100 transition-colors text-slate-700">
                       <span>Post</span>
@@ -68,7 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       <a href="/events/new" className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50">Events</a>
                     </div>
                   </div>
-                  <a href="/reviews" className="hover:text-primary transition-colors">Reviews</a>
                   <AdminNavLink />
                 </nav>
 

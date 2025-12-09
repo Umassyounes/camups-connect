@@ -1,6 +1,8 @@
+import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Database } from '@/lib/supabase/databaseTypes'
-import VerifiedBadge from './VerifiedBadge'
+import SaveButton from './SaveButton'
 
 type ListingRow = Database['public']['Tables']['Listing']['Row']
 type CategoryRow = Database['public']['Tables']['Category']['Row']
@@ -13,15 +15,16 @@ type ListingWithCategory = ListingRow & {
 
 type ListingCardProps = {
   listing: ListingWithCategory
+  showSaveButton?: boolean
 }
 
-export default function ListingCard({ listing }: ListingCardProps) {
+export default function ListingCard({ listing, showSaveButton = true }: ListingCardProps) {
   const price = typeof listing.priceCents === 'number'
     ? `$${(listing.priceCents / 100).toFixed(0)}`
-    : '—'
+    : '$0'
+
   const altText = listing.title || 'Marketplace listing image'
 
-  // Use first image from images array, fallback to imageUrl
   const displayImage = listing.images && listing.images.length > 0
     ? listing.images[0]
     : listing.imageUrl
@@ -30,19 +33,18 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const isBoosted = Boolean(listing.boostedUntil && new Date(listing.boostedUntil) > new Date())
   const hasImage = Boolean(displayImage)
 
-  // Determine condition badge color
   const getConditionBadge = (offsetPx: number = 3) => {
     const condition = listing.condition?.toLowerCase() || ''
     const baseClass = 'absolute left-3 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md'
     const style = { top: `${offsetPx}px` } as React.CSSProperties
     if (condition.includes('new') || condition === 'like new') {
-      return <span style={style} className={`${baseClass} bg-[#00C853]`}> Like New</span>
+      return <span style={style} className={`${baseClass} bg-[#00C853]`}>Like New</span>
     }
     if (condition === 'excellent') {
-      return <span style={style} className={`${baseClass} bg-[#00C853]`}> Excellent</span>
+      return <span style={style} className={`${baseClass} bg-[#00C853]`}>Excellent</span>
     }
     if (condition === 'good') {
-      return <span style={style} className={`${baseClass} bg-[#4F7CFF]`}> Good</span>
+      return <span style={style} className={`${baseClass} bg-[#4F7CFF]`}>Good</span>
     }
     return null
   }
@@ -53,7 +55,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
       className="group block h-full rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
     >
       <div className="flex h-full flex-col">
-        {/* Image Container */}
         <div className="aspect-[4/3] md:aspect-[16/11] w-full overflow-hidden bg-gray-100 relative">
           {listing.isSold && (
             <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
@@ -63,12 +64,17 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
 
-          {/* Condition Badge */}
           {!listing.isSold && getConditionBadge()}
 
           {isBoosted && !listing.isSold && (
             <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md flex items-center gap-1">
-              dY" Boosted
+              Boosted
+            </div>
+          )}
+
+          {showSaveButton && !listing.isSold && (
+            <div className={`absolute ${isBoosted ? 'top-12' : 'top-3'} right-3 z-10`}>
+              <SaveButton listingId={listing.id} size="sm" />
             </div>
           )}
 
@@ -82,24 +88,23 @@ export default function ListingCard({ listing }: ListingCardProps) {
           )}
 
           {hasImage ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={displayImage!}
+            <Image 
+              src={displayImage!} 
               alt={altText}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105" 
             />
           ) : (
             <div className="h-full w-full bg-gray-300" />
           )}
         </div>
 
-        {/* Content */}
         <div className="p-4 flex flex-col flex-1">
           <h3 className="font-bold text-[#1A202C] text-lg mb-1 line-clamp-2 group-hover:text-[#4F7CFF] transition-colors min-h-[3.1rem] leading-snug">
             {listing.title}
           </h3>
 
-          {/* Category Tag */}
           {listing.category && (
             <div className="flex items-center gap-2 mb-3">
               <svg className="w-4 h-4 text-[#718096]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,13 +114,11 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
 
-          {/* Price and Seller */}
           <div className="flex items-center justify-between mt-auto pt-3">
             <div className="text-2xl font-bold text-[#4F7CFF] leading-none">
               {price}
             </div>
 
-            {/* Seller Avatar and Name */}
             {listing.seller && (
               <div className="flex items-center gap-2">
                 {listing.seller && 'name' in listing.seller && listing.seller.name ? (

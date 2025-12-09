@@ -41,7 +41,6 @@ export function useRealtimeMessages(conversationId: number | null) {
         }
         setLoading(false)
       } catch (err) {
-        console.error("Failed to fetch messages:", err)
         setLoading(false)
       }
     }
@@ -55,19 +54,16 @@ export function useRealtimeMessages(conversationId: number | null) {
     // Listen for new messages broadcast
     channel
       .on('broadcast', { event: 'new-message' }, (payload) => {
-        console.log('New message broadcast received:', payload)
         if (payload.payload.conversationId === conversationId) {
           fetchMessages() // Refetch to get the complete message with sender info
         }
       })
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status)
-      })
+      .subscribe()
 
-    // Poll for new messages every 3 seconds as fallback
+    // Poll for new messages every 5 seconds as fallback (increased from 3s to reduce server load)
     const pollInterval = setInterval(() => {
       fetchMessages()
-    }, 3000)
+    }, 5000)
 
     return () => {
       isSubscribed = false

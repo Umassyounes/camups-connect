@@ -86,6 +86,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/events" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  Events
+                </a>
+              </li>
+              <li>
                 <a href="/reviews" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                   Reviews
@@ -169,9 +175,9 @@ export default function Footer() {
         <div className="border-t border-slate-200 pt-8 mb-8">
           <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl">✨</span>
+              <span className="text-2xl">ƒo"</span>
               <h3 className="font-bold text-slate-800 text-lg">Local Sponsors</h3>
-              <span className="text-2xl">✨</span>
+              <span className="text-2xl">ƒo"</span>
             </div>
             <p className="text-slate-600 text-sm">
               Coming Soon! We're partnering with local businesses to bring you exclusive deals and perks.
@@ -186,7 +192,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
           <div className="text-slate-500">
-            © {new Date().getFullYear()} Campus Connect. All rights reserved.
+            Ac {new Date().getFullYear()} Campus Connect. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-slate-500">
             <a href="/accessibility" className="hover:text-sky-500 transition">Accessibility</a>

@@ -1,8 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { sb } from "@/lib/supabase/browser"
-import ListingCard from "@/components/ListingCard"
 import VerifiedBadge from "@/components/VerifiedBadge"
 import type { Database } from "@/lib/supabase/databaseTypes"
 
@@ -19,20 +17,9 @@ type Profile = {
   totalRatings: number
   totalTransactions: number
 }
-type ListingRow = Database['public']['Tables']['Listing']['Row']
-type CategoryRow = Database['public']['Tables']['Category']['Row']
-type ListingWithRelations = ListingRow & {
-  category?: CategoryRow | null
-  seller?: {
-    id: number
-    name: string | null
-  }
-}
-
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [listings, setListings] = useState<ListingWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -74,15 +61,6 @@ export default function ProfilePage() {
           bio: data.data.bio || ""
         })
         setAvatarPreview(data.data.avatarUrl)
-        
-        // Fetch all user listings (including sold ones)
-        const listingsRes = await fetch('/api/listings')
-        const listingsData = await listingsRes.json()
-        if (listingsData.data) {
-          // Filter to get only the user's listings (both active and sold)
-          const userListings = listingsData.data.filter((l: any) => l.seller.id === data.data.id)
-          setListings(userListings)
-        }
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error)
@@ -137,6 +115,9 @@ export default function ProfilePage() {
         setAvatarPreview(data.data.avatarUrl)
         setAvatarFile(null)
         setShowEditModal(false)
+        
+        // Dispatch event to update avatar in UserButton
+        window.dispatchEvent(new CustomEvent('profileUpdated'))
       }
     } catch (error) {
       console.error('Failed to update profile:', error)
@@ -185,6 +166,8 @@ export default function ProfilePage() {
 
   const email = user.email ?? "unknown@umb.edu"
   const name = profile.name || email.split("@")[0]
+  const showInventory = false
+  const listings: any[] = []
 
   return (
     <div className="max-w-6xl w-full mx-auto space-y-6 md:space-y-8 p-3 md:p-4 lg:p-6 pb-20 md:pb-6">
@@ -338,22 +321,6 @@ export default function ProfilePage() {
                 <VerifiedBadge type="email" size="sm" />
                 {profile.phoneVerified && <VerifiedBadge type="phone" size="sm" />}
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 md:gap-3 rounded-xl md:rounded-2xl border border-slate-100 bg-slate-50/70 px-3 md:px-4 py-2 md:py-3">
-              {[{
-                label: 'Listings', value: listings.length
-              }, {
-                label: 'Sold', value: listings.filter(l => l.isSold).length
-              }, {
-                label: 'Deals', value: profile.totalTransactions || 0
-              }].map((stat) => (
-                <div className="text-center" key={stat.label}>
-                  <div className="text-xl md:text-2xl font-black text-slate-900">{stat.value}</div>
-                  <div className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-400">{stat.label}</div>
-                </div>
-              ))}
             </div>
 
             {/* Rating Display */}
