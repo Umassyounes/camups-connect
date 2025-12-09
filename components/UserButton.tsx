@@ -15,15 +15,19 @@ export default function UserButton() {
     async function fetchUserProfile(userId: string): Promise<string | null> {
       try {
         const res = await fetch('/api/profile', { 
+          credentials: 'include', // Important: send cookies
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache' }
         })
         if (res.ok) {
           const data = await res.json()
+          console.log('UserButton: Profile data received:', data.data?.avatarUrl)
           if (data.data?.avatarUrl) {
             avatarCacheRef.current = data.data.avatarUrl // Cache the avatar
             return data.data.avatarUrl
           }
+        } else {
+          console.log('UserButton: Profile fetch failed with status:', res.status)
         }
       } catch (error) {
         console.error('Failed to fetch profile:', error)
