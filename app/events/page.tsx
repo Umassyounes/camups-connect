@@ -311,7 +311,7 @@ export default function EventsPage() {
     <div className="mx-auto max-w-6xl px-3 md:px-6 pb-20 md:pb-6">
       {/* Header with Search */}
       <div className="mb-4 md:mb-6">
-        <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">UMass Boston Events</h1>
             <p className="mt-1 text-sm md:text-base text-foreground-secondary">Discover and join campus events</p>
@@ -387,14 +387,14 @@ export default function EventsPage() {
                   Promote your event →
                 </Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {sponsoredEvents.map(renderEventCard)}
               </div>
             </section>
           )}
 
           {organicEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {organicEvents.map(renderEventCard)}
             </div>
           ) : (
