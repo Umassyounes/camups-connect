@@ -52,6 +52,24 @@ export default function Footer() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-6 py-16">
+        {/* Local Sponsors Section - now highlighted at the top */}
+        <div className="mb-10">
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-2xl"></span>
+              <h3 className="font-bold text-slate-800 text-lg">Local Sponsors</h3>
+              <span className="text-2xl"></span>
+            </div>
+            <p className="text-slate-600 text-sm">
+              Coming Soon! We're partnering with local businesses to bring you exclusive deals and perks.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full border border-slate-300">
+              <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-slate-600 font-medium">Stay tuned for exciting partnerships</span>
+            </div>
+          </div>
+        </div>
+
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-12">
           {/* Brand Section - Larger on desktop */}
@@ -83,12 +101,6 @@ export default function Footer() {
                 <a href="/how-it-works" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                   How It Works
-                </a>
-              </li>
-              <li>
-                <a href="/events" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  Events
                 </a>
               </li>
               <li>
@@ -137,8 +149,8 @@ export default function Footer() {
             <ul className="space-y-4 text-sm">
               <li>
                 <a href="mailto:campusconnectcapstone@gmail.com" className="text-slate-600 hover:text-sky-500 transition flex items-center gap-3 group">
-                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 group-hover:bg-sky-500/20 border border-sky-500/30 flex items-center justify-center transition">
-                    <svg className="w-4 h-4 text-sky-500" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 group-hover:bg-sky-500/20 border border-sky-500/30 flex items-center justify-center transition">
+                    <svg className="w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                     </svg>
@@ -167,24 +179,6 @@ export default function Footer() {
                   </svg>
                 </a>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Local Sponsors Section */}
-        <div className="border-t border-slate-200 pt-8 mb-8">
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl"></span>
-              <h3 className="font-bold text-slate-800 text-lg">Local Sponsors</h3>
-              <span className="text-2xl"></span>
-            </div>
-            <p className="text-slate-600 text-sm">
-              Coming Soon! We're partnering with local businesses to bring you exclusive deals and perks.
-            </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full border border-slate-300">
-              <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-slate-600 font-medium">Stay tuned for exciting partnerships</span>
             </div>
           </div>
         </div>

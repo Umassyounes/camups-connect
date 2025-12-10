@@ -140,7 +140,7 @@ export default function EventsPage() {
       <div key={event.id} className="relative group">
         <Link
           href={`/events/${event.id}`}
-          className={`block rounded-xl ${cardClasses} bg-[var(--card-bg)] overflow-hidden hover:shadow-float transition`}
+          className={`flex flex-col h-full rounded-xl ${cardClasses} bg-[var(--card-bg)] overflow-hidden hover:shadow-float transition`}
         >
           {/* Event Image */}
           <div className="aspect-video bg-gradient-to-br from-[rgba(129,140,248,0.35)] via-[rgba(14,21,33,0.65)] to-[rgba(14,116,144,0.4)] relative overflow-hidden">
@@ -177,12 +177,12 @@ export default function EventsPage() {
           </div>
 
           {/* Event Info */}
-          <div className="p-4 space-y-2">
-            <h3 className="font-bold text-lg line-clamp-2 text-foreground group-hover:text-primary transition">
+          <div className="p-4 space-y-2 flex-1 flex flex-col">
+            <h3 className="font-bold text-lg line-clamp-2 text-foreground group-hover:text-primary transition min-h-[52px]">
               {event.title}
             </h3>
 
-            <p className="text-sm text-foreground-secondary line-clamp-2">
+            <p className="text-sm text-foreground-secondary line-clamp-2 min-h-[40px]">
               {event.description}
             </p>
 
@@ -218,7 +218,7 @@ export default function EventsPage() {
               )}
             </div>
 
-            <div className="pt-2 border-t border-border text-xs text-foreground-secondary">
+            <div className="pt-2 border-t border-border text-xs text-foreground-secondary mt-auto">
               {event.isExternal ? (
                 <div className="flex items-center justify-between">
                   <span>Official UMass Boston Event</span>

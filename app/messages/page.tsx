@@ -376,10 +376,10 @@ function MessagesPageInner() {
   }
 
   return (
-    <div className="w-full flex flex-col pb-20 md:pb-0 px-3 md:px-0 h-[calc(100vh-120px)] md:h-[calc(100vh-140px)]">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 h-full min-h-0">
+    <div className="w-full flex flex-col pb-8 md:pb-0 px-3 md:px-0 h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] overflow-hidden">
+      <div className="mx-auto max-w-6xl w-full h-full min-h-0 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 px-0 md:px-2 overflow-hidden">
         {/* Conversations List */}
-        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} md:col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden h-full`}>
+        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} md:col-span-1 bg-[var(--card-bg)] rounded-xl border border-border flex flex-col overflow-hidden h-full min-h-0`}>
           <div className="p-3 md:p-4 border-b border-border flex-shrink-0">
             <h2 className="text-lg md:text-xl font-bold text-foreground">Messages</h2>
           </div>
@@ -500,6 +500,47 @@ function MessagesPageInner() {
                 </Link>
               </div>
 
+              {/* Mobile conversation scroller so it's clear when multiple profiles are available */}
+              {conversations.length > 0 && (
+                <div className="md:hidden px-3 py-2 border-b border-border bg-[var(--background-elevated)]">
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {conversations.map((conv) => (
+                      <button
+                        key={conv.id}
+                        onClick={() => setSelectedConversationId(conv.id)}
+                        className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                          selectedConversationId === conv.id 
+                            ? 'border-primary bg-primary/10 text-foreground' 
+                            : 'border-border bg-[var(--card-bg)] text-foreground-secondary hover:text-foreground'
+                        }`}
+                      >
+                        {conv.otherUser.avatarUrl ? (
+                          <img 
+                            src={conv.otherUser.avatarUrl} 
+                            alt={conv.otherUser.name || 'User'}
+                            className="w-9 h-9 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
+                            {(conv.otherUser.name || 'U').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="text-left">
+                          <p className="text-sm font-semibold leading-tight truncate max-w-[140px]">{conv.otherUser.name || 'User'}</p>
+                          {conv.lastMessage && (
+                            <p className="text-[10px] text-foreground-secondary leading-tight truncate max-w-[140px]">
+                              {conv.lastMessage.content.startsWith('[Image]') || conv.lastMessage.content.startsWith('[Audio]')
+                                ? conv.lastMessage.content
+                                : conv.lastMessage.content}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Messages */}
               <div 
                 ref={messagesContainerRef}
@@ -535,9 +576,14 @@ function MessagesPageInner() {
                                 />
                               )}
                               {msg.messageType === 'VOICE' && msg.mediaUrl && (
-                                <audio controls className="mb-2 w-full" style={{ maxWidth: '250px' }}>
-                                  <source src={msg.mediaUrl} />
-                                </audio>
+                                <div className="mb-2">
+                                  <audio 
+                                    controls 
+                                    className="w-[260px] max-w-full bg-white text-slate-800 rounded-md overflow-hidden whitespace-nowrap"
+                                  >
+                                    <source src={msg.mediaUrl} />
+                                  </audio>
+                                </div>
                               )}
                               {msg.content && <p className="text-xs md:text-sm break-words">{msg.content}</p>}
                               <p className={`text-xs mt-1 ${isOwn ? 'text-white/80' : 'text-foreground-secondary'}`}>
