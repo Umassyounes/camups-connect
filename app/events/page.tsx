@@ -310,6 +310,7 @@ export default function EventsPage() {
   return (
     <div className="mx-auto max-w-7xl px-3 md:px-6 pb-20 md:pb-6">
       {/* Header with Search */}
+      
       <div className="mb-4 md:mb-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4">
           <div>
@@ -323,34 +324,34 @@ export default function EventsPage() {
         <p className="text-sm md:text-base text-gray-600 font-medium">📢 Sponsored Events Coming Soon</p>
       </div>
         
-        {/* Search Bar */}
-        <div className="max-w-2xl">
-          <SearchBar />
+        {/* Search + Filters aligned */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <div className="w-full md:w-1/2">
+            <SearchBar />
+          </div>
+          <div className="flex gap-2 md:gap-3 flex-wrap justify-start md:justify-end w-full md:w-1/2">
+            <button
+              onClick={() => setFilter("upcoming")}
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
+                filter === "upcoming"
+                  ? "border border-primary bg-primary/15 text-primary shadow-subtle"
+                  : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
+              }`}
+            >
+              Upcoming Events
+            </button>
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
+                filter === "all"
+                  ? "border border-primary bg-primary/15 text-primary shadow-subtle"
+                  : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
+              }`}
+            >
+              All Events
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Filters - Simplified to 2 main filters */}
-      <div className="mb-4 md:mb-6 flex gap-2 md:gap-3 overflow-x-auto pb-2">
-        <button
-          onClick={() => setFilter("upcoming")}
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
-            filter === "upcoming"
-              ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-              : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-          }`}
-        >
-          📅 Upcoming Events
-        </button>
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition text-sm md:text-base whitespace-nowrap ${
-            filter === "all"
-              ? "border border-primary bg-primary/15 text-primary shadow-subtle"
-              : "border border-border bg-[var(--background-secondary)] text-foreground-secondary hover:text-foreground"
-          }`}
-        >
-          🗓️ All Events
-        </button>
       </div>
 
       {/* Events Grid */}

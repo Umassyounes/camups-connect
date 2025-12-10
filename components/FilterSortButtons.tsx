@@ -42,7 +42,7 @@ export default function FilterSortButtons() {
             className="fixed inset-0 z-10" 
             onClick={() => setShowSortMenu(false)}
           />
-          <div className="absolute left-0 md:right-0 md:left-auto mt-2 w-full md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden">
+          <div className="absolute left-0 top-full mt-2 w-full md:w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden">
             <button
               onClick={() => handleSort("default")}
               className={`w-full text-left px-3 md:px-4 py-2 md:py-3 hover:bg-blue-50 transition text-sm md:text-base ${currentSort === "default" ? "bg-blue-50 text-[#4F7CFF] font-semibold" : "text-[#4A5568]"}`}

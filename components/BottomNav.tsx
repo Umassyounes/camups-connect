@@ -56,22 +56,25 @@ const items: NavItem[] = [
 export default function BottomNav() {
   const path = usePathname()
   const [showPostMenu, setShowPostMenu] = useState(false)
+  const postActive = path.startsWith('/listings') || path.startsWith('/events/new')
 
   return (
     <>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[var(--background-elevated)]/95 backdrop-blur shadow-subtle sm:hidden">
         <ul className="mx-auto flex max-w-xl items-center justify-between px-3 py-2 text-xs font-medium text-foreground-secondary">
           {items.map((item) => {
-            const isActive = item.isMenu ? false : item.exact ? path === item.href : path.startsWith(item.href)
+            const isActive = item.isMenu ? postActive : item.exact ? path === item.href : path.startsWith(item.href)
             if (item.isMenu) {
               return (
                 <li key={item.label}>
                   <button
                     onClick={() => setShowPostMenu((v) => !v)}
-                    className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors ${
-                      showPostMenu ? 'text-primary' : 'text-foreground-secondary hover:text-foreground'
-                    }`}
-                  >
+                  className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 border transition-colors ${
+                    postActive || showPostMenu
+                      ? 'text-primary bg-primary/15 border-primary/40 shadow-subtle'
+                      : 'text-foreground-secondary border-slate-200/80 bg-white hover:text-foreground hover:bg-slate-100'
+                  }`}
+                >
                     <span aria-hidden>{item.icon}</span>
                     <span>{item.label}</span>
                   </button>
@@ -82,8 +85,10 @@ export default function BottomNav() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors ${
-                    isActive ? 'text-primary' : 'text-foreground-secondary hover:text-foreground'
+                  className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 border transition-colors ${
+                    isActive
+                      ? 'text-primary bg-primary/15 border-primary/40 shadow-subtle'
+                      : 'text-foreground-secondary border-slate-200/80 bg-white hover:text-foreground hover:bg-slate-100'
                   }`}
                 >
                   <span aria-hidden>{item.icon}</span>

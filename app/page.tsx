@@ -101,15 +101,15 @@ export default async function Marketplace({
   }
 
   return (
-    <main className="min-h-screen pb-20 bg-[#F5F7FA]">
+    <main className="min-h-screen pb-20">
       {/* Hero + Search */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-3 md:px-6 py-6 md:py-8 space-y-4 md:space-y-5">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1A202C] mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               {proOnly ? '🌟 Pro Members' : 'UMB Marketplace'}
             </h1>
-            <p className="text-sm md:text-base text-[#718096]">
+            <p className="mt-1 text-sm md:text-base text-foreground-secondary">
               {proOnly ? 'Exclusive listings from verified Pro sellers' : 'Verified listings from trusted students'}
             </p>
           </div>
@@ -119,8 +119,8 @@ export default async function Marketplace({
           </div>
 
           {/* Search and Sort */}
-          <div className="flex flex-col gap-2 md:gap-3">
-            <div className="flex-1 w-full">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+            <div className="w-full md:w-1/2">
               <div className="relative">
                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -128,7 +128,9 @@ export default async function Marketplace({
                 <SearchBar />
               </div>
             </div>
-            <FilterSortButtons />
+            <div className="w-full md:w-1/2 flex justify-start md:justify-end">
+              <FilterSortButtons />
+            </div>
           </div>
         </div>
       </section>
