@@ -39,6 +39,7 @@ type Conversation = {
 function MessagesPageInner() {
   const searchParams = useSearchParams()
   const conversationParam = searchParams.get('conversation')
+  const userParam = searchParams.get('user')
   
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null)
@@ -55,30 +56,76 @@ function MessagesPageInner() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null)
+  const [creatingConversation, setCreatingConversation] = useState(false)
   
   const { messages, loading: messagesLoading } = useRealtimeMessages(selectedConversationId)
 
   const MAX_IMAGE_MB = 8
   const MAX_AUDIO_MB = 12
 
-  // Fetch conversations
+  // Function to fetch conversations
+  const fetchConversations = async () => {
+    try {
+      const res = await fetch("/api/messages")
+      const data = await res.json()
+      if (data.data) {
+        setConversations(data.data)
+        return data.data
+      }
+      return []
+    } catch (error) {
+      console.error("Failed to fetch conversations:", error)
+      return []
+    }
+  }
+
+  // Handle ?user= parameter - create/find conversation with that user
   useEffect(() => {
-    fetch("/api/messages")
-      .then(res => res.json())
-      .then(data => {
-        if (data.data) {
-          setConversations(data.data)
-          
-          // Auto-select conversation from URL parameter
-          if (conversationParam) {
-            const convId = parseInt(conversationParam)
-            if (!isNaN(convId) && data.data.some((c: Conversation) => c.id === convId)) {
-              setSelectedConversationId(convId)
+    if (userParam && !creatingConversation) {
+      const userId = parseInt(userParam)
+      if (!isNaN(userId)) {
+        setCreatingConversation(true)
+        
+        // Create FormData for the API
+        const formData = new FormData()
+        formData.append('sellerId', userId.toString())
+        
+        fetch('/api/conversations/create', {
+          method: 'POST',
+          body: formData
+        })
+          .then(res => res.json())
+          .then(async (data) => {
+            if (data.redirect) {
+              // Extract conversation ID from redirect URL and set it
+              const match = data.redirect.match(/conversation=(\d+)/)
+              if (match) {
+                const convId = parseInt(match[1])
+                // Refetch conversations to include the new/found one
+                await fetchConversations()
+                setSelectedConversationId(convId)
+                // Update URL without the user param
+                window.history.replaceState({}, '', `/messages?conversation=${convId}`)
+              }
             }
-          }
+          })
+          .catch(console.error)
+          .finally(() => setCreatingConversation(false))
+      }
+    }
+  }, [userParam])
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    fetchConversations().then(convs => {
+      // Auto-select conversation from URL parameter
+      if (conversationParam) {
+        const convId = parseInt(conversationParam)
+        if (!isNaN(convId) && convs.some((c: Conversation) => c.id === convId)) {
+          setSelectedConversationId(convId)
         }
-      })
-      .catch(console.error)
+      }
+    })
   }, [conversationParam])
 
   // Auto-scroll to bottom only when user is near bottom or sending

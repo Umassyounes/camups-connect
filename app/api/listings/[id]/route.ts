@@ -105,13 +105,43 @@ export async function PATCH(
       )
     }
 
+    // Build update object with only provided fields
+    const updateData: Record<string, any> = {
+      updatedAt: new Date().toISOString()
+    }
+    
+    if (body.title !== undefined) updateData.title = body.title
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.priceCents !== undefined) updateData.priceCents = body.priceCents
+    if (body.condition !== undefined) updateData.condition = body.condition
+    if (body.categoryId !== undefined) updateData.categoryId = body.categoryId
+    if (body.campus !== undefined) updateData.campus = body.campus
+    if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl
+    if (body.images !== undefined) updateData.images = body.images
+    if (body.imageCount !== undefined) updateData.imageCount = body.imageCount
+    if (body.isSold !== undefined) updateData.isSold = body.isSold
+
+    // For admin/moderator edits on others' listings, use service role to bypass RLS
+    let updateClient = supabase
+    if (!isOwner && isAdminOrModerator) {
+      console.log('🔓 Using service role for admin listing update')
+      const { createClient } = await import('@supabase/supabase-js')
+      updateClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    }
+
     // Update listing
-    const { data: updatedListing, error } = await supabase
+    const { data: updatedListing, error } = await updateClient
       .from('Listing')
-      .update({
-        isSold: body.isSold,
-        updatedAt: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', parseInt(id))
       .select(`
         *,
