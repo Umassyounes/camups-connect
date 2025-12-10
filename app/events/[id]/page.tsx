@@ -371,9 +371,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            <div className="mt-6 rounded-xl border border-dashed border-border bg-[var(--background-secondary)] p-4 text-sm text-foreground-secondary">
-              <p className="font-semibold text-foreground mb-2">Safety Tips</p>
-              <ul className="space-y-1 list-disc list-inside">
+            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-subtle">
+              <p className="font-semibold mb-2 text-amber-900">Safety Tips</p>
+              <ul className="space-y-1 list-disc list-inside text-amber-800">
                 <li>Prefer meeting in a public place</li>
                 <li>Campus Connect does not regulate or handle payments of any kind</li>
               </ul>

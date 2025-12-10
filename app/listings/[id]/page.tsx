@@ -239,9 +239,9 @@ export default function ListingDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            <div className="mt-4 border border-dashed border-border rounded-xl p-4 text-sm text-foreground">
-              <p className="font-semibold mb-2">Safety Tips</p>
-              <ul className="space-y-1 list-disc list-inside text-foreground-secondary">
+            <div className="mt-4 border border-amber-200 rounded-xl p-4 text-sm bg-amber-50 text-amber-900 shadow-subtle">
+              <p className="font-semibold mb-2 text-amber-900">Safety Tips</p>
+              <ul className="space-y-1 list-disc list-inside text-amber-800">
                 <li>Prefer meeting in a public place</li>
                 <li>Inspect the item before payment</li>
                 <li>Campus Connect does not regulate or handle payments</li>

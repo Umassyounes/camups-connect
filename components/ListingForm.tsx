@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 
-const MAX_IMAGES = 5
+const MAX_IMAGES = 1
 
 export default function ListingForm({ categories }: { categories: { id: number; name: string }[] }) {
   const [loading, setLoading] = useState(false)
@@ -24,9 +24,9 @@ export default function ListingForm({ categories }: { categories: { id: number; 
 
     if (filesToAdd.length === 0) {
       if (validFiles.length === 0) {
-        alert('Please select valid image files')
+        alert('Please select a valid image file')
       } else {
-        alert(`Maximum ${MAX_IMAGES} images allowed`)
+        alert('Only one image is allowed')
       }
       return
     }
@@ -188,13 +188,12 @@ export default function ListingForm({ categories }: { categories: { id: number; 
       {/* Image Upload */}
       <div className="space-y-2">
         <label className="block text-sm font-medium">
-          Product Images ({selectedImages.length}/{MAX_IMAGES})
+          Product Image
         </label>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          multiple
           onChange={handleImageSelect}
           className="hidden"
         />
@@ -243,10 +242,10 @@ export default function ListingForm({ categories }: { categories: { id: number; 
             <div className="text-foreground-secondary">
               <span className="text-3xl block mb-2">📷</span>
               <span className="text-sm block mb-1 font-medium">
-                {imagePreviews.length === 0 ? 'Add product images' : 'Add more images'}
+                Add a product image
               </span>
               <span className="text-xs block">
-                Drag and drop or click to browse (max {MAX_IMAGES})
+                Drag and drop or click to upload (1 image max)
               </span>
             </div>
           </div>

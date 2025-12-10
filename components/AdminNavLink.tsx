@@ -6,13 +6,14 @@ import { usePathname } from 'next/navigation'
 type Props = {
   className?: string
   activeClassName?: string
+  isActiveOverride?: boolean
 }
 
-export default function AdminNavLink({ className = '', activeClassName = '' }: Props) {
+export default function AdminNavLink({ className = '', activeClassName = '', isActiveOverride }: Props) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [checked, setChecked] = useState(false)
   const pathname = usePathname() || ''
-  const isActive = pathname.startsWith('/admin')
+  const isActive = typeof isActiveOverride === 'boolean' ? isActiveOverride : pathname.startsWith('/admin')
 
   useEffect(() => {
     let isMounted = true

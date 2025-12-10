@@ -13,19 +13,21 @@ type NavLink = {
 }
 
 const links: NavLink[] = [
-  { href: "/", label: "Marketplace", match: (p) => p === "/" || p.startsWith("/listings") },
-  { href: "/events", label: "Events" },
+  { href: "/", label: "Marketplace", match: (p) => p === "/" || (p.startsWith("/listings") && !p.startsWith("/listings/new")) },
+  { href: "/events", label: "Events", match: (p) => p.startsWith("/events") && !p.startsWith("/events/new") },
   { href: "/messages", label: "Messages" },
 ]
 
 export default function Header() {
   const pathname = usePathname() || "/"
-  const postActive = pathname.startsWith("/listings") || pathname.startsWith("/events/new")
+  const postActive = pathname.startsWith("/listings/new") || pathname.startsWith("/events/new")
 
   const isActive = (link: NavLink) => {
     if (link.match) return link.match(pathname)
     return pathname.startsWith(link.href)
   }
+
+  const adminActive = pathname.startsWith('/admin')
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/40 bg-white/80 backdrop-blur-xl shadow-[0_15px_45px_rgba(15,23,42,0.08)]">
@@ -82,6 +84,7 @@ export default function Header() {
           <AdminNavLink
             className="px-3 py-1.5 rounded-lg border border-transparent text-slate-600 hover:text-primary hover:bg-slate-100 transition-colors"
             activeClassName=" text-primary bg-primary/10 border-primary/30 shadow-subtle"
+            isActiveOverride={adminActive}
           />
         </nav>
 
