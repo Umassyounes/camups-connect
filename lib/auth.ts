@@ -57,7 +57,11 @@ export async function getCurrentUser(): Promise<
     if (existingProfile.name !== desiredName) {
       updates.name = desiredName
     }
-    if (existingProfile.avatarUrl !== avatarUrl) {
+    // Only update avatarUrl if:
+    // 1. The existing profile has no avatar (null/empty) AND
+    // 2. There's a new avatar from OAuth to use
+    // This prevents overwriting user-uploaded avatars with OAuth avatars or null
+    if (!existingProfile.avatarUrl && avatarUrl) {
       updates.avatarUrl = avatarUrl
     }
     if (Object.keys(updates).length === 0) {
