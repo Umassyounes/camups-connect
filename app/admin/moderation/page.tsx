@@ -55,15 +55,32 @@ interface Stats {
   recentActions?: ModerationLogItem[]
 }
 
+interface UserReportItem {
+  id: number
+  reporterId: number
+  contentType: 'listing' | 'message' | 'profile' | 'event'
+  contentId: number
+  category: string
+  description: string | null
+  status: 'pending' | 'reviewed' | 'dismissed'
+  createdAt: string
+  reporter?: {
+    id: number
+    name: string | null
+  }
+}
+
 export default function AdminModerationPage() {
   const router = useRouter()
   const [flaggedContent, setFlaggedContent] = useState<FlaggedContentItem[]>([])
+  const [userReports, setUserReports] = useState<UserReportItem[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('pending')
   const [severityFilter, setSeverityFilter] = useState<string>('')
   const [contentTypeFilter, setContentTypeFilter] = useState<string>('')
   const [selectedItem, setSelectedItem] = useState<FlaggedContentItem | null>(null)
+  const [selectedReport, setSelectedReport] = useState<UserReportItem | null>(null)
   const [reviewNotes, setReviewNotes] = useState('')
   const [processing, setProcessing] = useState(false)
   const [activeTab, setActiveTab] = useState<'flags' | 'reports' | 'log'>('flags')
@@ -102,10 +119,70 @@ export default function AdminModerationPage() {
         const statsData = await statsRes.json()
         setStats(statsData.data)
       }
+
+      // Fetch user reports
+      const reportsRes = await fetch('/api/admin/user-reports')
+      if (reportsRes.ok) {
+        const reportsData = await reportsRes.json()
+        setUserReports(reportsData.data || [])
+      }
     } catch (error) {
       console.error('Failed to fetch admin data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleReviewReport(reportId: number, action: 'reviewed' | 'dismissed' | 'escalate') {
+    setProcessing(true)
+    try {
+      const res = await fetch('/api/admin/user-reports', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: reportId,
+          action,
+          notes: reviewNotes,
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to process report')
+      }
+
+      alert(`Report ${action} successfully!`)
+      setSelectedReport(null)
+      setReviewNotes('')
+      fetchData()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  async function handleDeleteFromQueue(id: number) {
+    if (!confirm('Are you sure you want to remove this from the flagged content queue? This will not delete the actual content.')) {
+      return
+    }
+    
+    setProcessing(true)
+    try {
+      const res = await fetch(`/api/admin/flagged-content?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to remove from queue')
+      }
+
+      alert('Removed from queue successfully!')
+      setSelectedItem(null)
+      fetchData()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setProcessing(false)
     }
   }
 
@@ -256,7 +333,7 @@ export default function AdminModerationPage() {
                 : 'border-transparent text-foreground-secondary hover:text-foreground'
             }`}
           >
-            User Reports ({stats?.overview.totalReports || 0})
+            User Reports ({userReports.length})
           </button>
           <button
             onClick={() => setActiveTab('log')}
@@ -358,12 +435,21 @@ export default function AdminModerationPage() {
                           {formatDate(item.createdAt)}
                         </div>
                       </div>
-                      <button
-                        onClick={() => setSelectedItem(item)}
-                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover text-sm transition-colors"
-                      >
-                        Review
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSelectedItem(item)}
+                          className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm transition-colors font-medium"
+                        >
+                          Review
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFromQueue(item.id)}
+                          className="px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md text-sm transition-colors"
+                          title="Remove from queue"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -377,47 +463,82 @@ export default function AdminModerationPage() {
       {activeTab === 'reports' && (
         <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-border">
-            <h2 className="text-xl font-semibold text-foreground">User Reports</h2>
+            <h2 className="text-xl font-semibold text-foreground">User Reports ({userReports.length})</h2>
             <p className="text-sm text-foreground-secondary mt-1">Reports submitted by users about problematic content or behavior</p>
           </div>
           
-          <div className="p-6">
-            {stats?.overview.totalReports === 0 ? (
-              <div className="text-center py-8 text-foreground-secondary">
+          {/* Stats */}
+          <div className="p-4 border-b border-border">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="bg-background-secondary rounded-lg p-4">
+                <div className="text-2xl font-bold text-foreground">{stats?.overview.totalReports || 0}</div>
+                <div className="text-sm text-foreground-secondary">Total Reports</div>
+              </div>
+              <div className="bg-background-secondary rounded-lg p-4">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats?.overview.pendingReports || 0}</div>
+                <div className="text-sm text-foreground-secondary">Pending Review</div>
+              </div>
+              <div className="bg-background-secondary rounded-lg p-4">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{(stats?.overview.totalReports || 0) - (stats?.overview.pendingReports || 0)}</div>
+                <div className="text-sm text-foreground-secondary">Resolved</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reports List */}
+          <div className="divide-y divide-border">
+            {userReports.length === 0 ? (
+              <div className="p-8 text-center text-foreground-secondary">
                 <div className="text-4xl mb-4">📭</div>
                 <p>No user reports have been submitted yet.</p>
                 <p className="text-sm mt-2">Reports from users will appear here for review.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-background-secondary rounded-lg p-4">
-                    <div className="text-2xl font-bold text-foreground">{stats?.overview.totalReports || 0}</div>
-                    <div className="text-sm text-foreground-secondary">Total Reports</div>
-                  </div>
-                  <div className="bg-background-secondary rounded-lg p-4">
-                    <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats?.overview.pendingReports || 0}</div>
-                    <div className="text-sm text-foreground-secondary">Pending Review</div>
-                  </div>
-                  <div className="bg-background-secondary rounded-lg p-4">
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{(stats?.overview.totalReports || 0) - (stats?.overview.pendingReports || 0)}</div>
-                    <div className="text-sm text-foreground-secondary">Resolved</div>
+              userReports.map((report) => (
+                <div key={report.id} className="p-4 hover:bg-background-secondary/50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          report.status === 'pending' 
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                            : report.status === 'reviewed'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                        }`}>
+                          {report.status.toUpperCase()}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                          {report.category}
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-background-secondary text-foreground-secondary">
+                          {report.contentType}
+                        </span>
+                      </div>
+                      <div className="font-medium text-foreground mb-1">
+                        {report.contentType.charAt(0).toUpperCase() + report.contentType.slice(1)} #{report.contentId}
+                      </div>
+                      {report.description && (
+                        <div className="text-sm text-foreground-secondary mb-1 italic">
+                          &quot;{report.description}&quot;
+                        </div>
+                      )}
+                      <div className="text-sm text-foreground-secondary">
+                        Reported by: {report.reporter?.name || 'Unknown'} (ID: {report.reporterId}) • 
+                        {formatDate(report.createdAt)}
+                      </div>
+                    </div>
+                    {report.status === 'pending' && (
+                      <button
+                        onClick={() => setSelectedReport(report)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm transition-colors font-medium"
+                      >
+                        Review
+                      </button>
+                    )}
                   </div>
                 </div>
-                <p className="text-sm text-foreground-secondary">
-                  User reports are automatically converted to flagged content items. 
-                  View them in the &quot;Flagged Content&quot; tab filtered by source: user_report.
-                </p>
-                <button
-                  onClick={() => {
-                    setActiveTab('flags')
-                    setStatusFilter('pending')
-                  }}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-                >
-                  View Pending Reports in Queue
-                </button>
-              </div>
+              ))
             )}
           </div>
         </div>
@@ -474,11 +595,21 @@ export default function AdminModerationPage() {
 
       {/* Review Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto border border-border">
-            <h3 className="text-xl font-semibold mb-4 text-foreground">Review Flagged Content</h3>
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        >
+          <div 
+            className="rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl"
+            style={{
+              backgroundColor: 'var(--card, #ffffff)',
+              border: '1px solid var(--border, #e5e7eb)',
+              color: 'var(--foreground, #111827)'
+            }}
+          >
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground, #111827)' }}>Review Flagged Content</h3>
             
-            <div className="space-y-3 mb-6 text-foreground">
+            <div className="space-y-3 mb-6" style={{ color: 'var(--foreground, #111827)' }}>
               <div>
                 <span className="font-medium">Content Type:</span> {selectedItem.contentType}
               </div>
@@ -499,18 +630,29 @@ export default function AdminModerationPage() {
               </div>
               <div>
                 <span className="font-medium">Details:</span>
-                <pre className="mt-1 p-2 bg-background-secondary rounded text-xs overflow-auto text-foreground-secondary">
+                <pre 
+                  className="mt-1 p-2 rounded text-xs overflow-auto"
+                  style={{
+                    backgroundColor: 'var(--background, #f9fafb)',
+                    color: 'var(--foreground-secondary, #6b7280)'
+                  }}
+                >
                   {JSON.stringify(selectedItem.details, null, 2)}
                 </pre>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="block font-medium mb-2 text-foreground">Review Notes</label>
+              <label className="block font-medium mb-2" style={{ color: 'var(--foreground, #111827)' }}>Review Notes</label>
               <textarea
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                className="w-full px-3 py-2 rounded-md"
+                style={{
+                  backgroundColor: 'var(--background, #ffffff)',
+                  color: 'var(--foreground, #111827)',
+                  border: '1px solid var(--border, #e5e7eb)'
+                }}
                 rows={3}
                 placeholder="Add notes about your decision..."
               />
@@ -526,7 +668,7 @@ export default function AdminModerationPage() {
               </button>
               <button
                 onClick={() => handleReview(selectedItem.id, 'rejected', false, false)}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
                 disabled={processing}
               >
                 ⚠️ Reject
@@ -546,8 +688,124 @@ export default function AdminModerationPage() {
                 🗑️ Delete + Strike
               </button>
               <button
+                onClick={() => handleDeleteFromQueue(selectedItem.id)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                disabled={processing}
+              >
+                Remove from Queue
+              </button>
+              <button
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-2 border border-border rounded-md hover:bg-background-secondary text-foreground transition-colors"
+                className="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                style={{
+                  border: '1px solid var(--border, #e5e7eb)',
+                  color: 'var(--foreground, #111827)'
+                }}
+                disabled={processing}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Report Review Modal */}
+      {selectedReport && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        >
+          <div 
+            className="rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl"
+            style={{
+              backgroundColor: 'var(--card, #ffffff)',
+              border: '1px solid var(--border, #e5e7eb)',
+              color: 'var(--foreground, #111827)'
+            }}
+          >
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground, #111827)' }}>Review User Report</h3>
+            
+            <div className="space-y-3 mb-6" style={{ color: 'var(--foreground, #111827)' }}>
+              <div>
+                <span className="font-medium">Content Type:</span> {selectedReport.contentType}
+              </div>
+              <div>
+                <span className="font-medium">Content ID:</span> {selectedReport.contentId}
+              </div>
+              <div>
+                <span className="font-medium">Reported by:</span> {selectedReport.reporter?.name || 'Unknown'} (ID: {selectedReport.reporterId})
+              </div>
+              <div>
+                <span className="font-medium">Category:</span> 
+                <span className="ml-2 px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  {selectedReport.category}
+                </span>
+              </div>
+              {selectedReport.description && (
+                <div>
+                  <span className="font-medium">Description:</span>
+                  <p 
+                    className="mt-1 p-2 rounded text-sm italic"
+                    style={{
+                      backgroundColor: 'var(--background, #f9fafb)',
+                      color: 'var(--foreground-secondary, #6b7280)'
+                    }}
+                  >
+                    &quot;{selectedReport.description}&quot;
+                  </p>
+                </div>
+              )}
+              <div>
+                <span className="font-medium">Reported:</span> {formatDate(selectedReport.createdAt)}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-medium mb-2" style={{ color: 'var(--foreground, #111827)' }}>Review Notes</label>
+              <textarea
+                value={reviewNotes}
+                onChange={(e) => setReviewNotes(e.target.value)}
+                className="w-full px-3 py-2 rounded-md"
+                style={{
+                  backgroundColor: 'var(--background, #ffffff)',
+                  color: 'var(--foreground, #111827)',
+                  border: '1px solid var(--border, #e5e7eb)'
+                }}
+                rows={3}
+                placeholder="Add notes about your decision..."
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleReviewReport(selectedReport.id, 'reviewed')}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                disabled={processing}
+              >
+                ✅ Mark Reviewed
+              </button>
+              <button
+                onClick={() => handleReviewReport(selectedReport.id, 'escalate')}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+                disabled={processing}
+              >
+                🚨 Escalate to Flagged
+              </button>
+              <button
+                onClick={() => handleReviewReport(selectedReport.id, 'dismissed')}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                disabled={processing}
+              >
+                ❌ Dismiss
+              </button>
+              <button
+                onClick={() => setSelectedReport(null)}
+                className="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                style={{
+                  border: '1px solid var(--border, #e5e7eb)',
+                  color: 'var(--foreground, #111827)'
+                }}
                 disabled={processing}
               >
                 Cancel

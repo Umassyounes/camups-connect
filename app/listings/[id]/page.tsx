@@ -324,6 +324,12 @@ export default function ListingDetailPage({ params }: PageProps) {
             <div className="rounded-2xl border border-border bg-[var(--card-bg)] p-4 md:p-6 shadow-subtle space-y-3">
               <p className="text-sm text-foreground-secondary font-medium">This is your listing</p>
               <div className="flex flex-col gap-2 md:flex-row md:gap-3">
+                <Link
+                  href={`/listings/${listing.id}/edit`}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold text-center shadow-lg"
+                >
+                  Edit Listing
+                </Link>
                 {!listing.isSold && (
                   <button
                     onClick={handleMarkAsSold}
@@ -345,15 +351,23 @@ export default function ListingDetailPage({ params }: PageProps) {
           )}
 
           {!isOwnListing && isAdmin && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 md:p-5 shadow-subtle space-y-2">
-              <p className="text-xs text-red-700 font-semibold uppercase tracking-wide">Admin Actions</p>
-              <button
-                onClick={handleDelete}
-                disabled={actionLoading}
-                className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 shadow-subtle"
-              >
-                {actionLoading ? "Deleting..." : "Admin: Delete Listing"}
-              </button>
+            <div className="rounded-2xl border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 p-4 md:p-5 shadow-subtle space-y-2">
+              <p className="text-xs text-red-700 dark:text-red-400 font-semibold uppercase tracking-wide">Admin Actions</p>
+              <div className="flex flex-col gap-2 md:flex-row md:gap-3">
+                <Link
+                  href={`/listings/${listing.id}/edit`}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium text-center shadow-subtle"
+                >
+                  Admin: Edit Listing
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  disabled={actionLoading}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 shadow-subtle"
+                >
+                  {actionLoading ? "Deleting..." : "Admin: Delete Listing"}
+                </button>
+              </div>
             </div>
           )}
 

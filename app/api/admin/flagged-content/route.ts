@@ -231,3 +231,74 @@ export async function PATCH(req: NextRequest) {
     )
   }
 }
+
+// DELETE /api/admin/flagged-content - Remove flagged content entry from queue
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await requireAdmin(req)
+    if (authResult instanceof NextResponse) return authResult
+    const { admin } = authResult
+
+    const supabase = await sbServer()
+    const url = new URL(req.url)
+    const id = url.searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing flagged content ID' },
+        { status: 400 }
+      )
+    }
+
+    // Get the flagged content first
+    const { data: flaggedContent, error: fetchError } = await supabase
+      .from('FlaggedContent')
+      .select('*')
+      .eq('id', parseInt(id))
+      .single()
+
+    if (fetchError || !flaggedContent) {
+      return NextResponse.json(
+        { error: 'Flagged content not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete the flagged content entry
+    const { error: deleteError } = await supabase
+      .from('FlaggedContent')
+      .delete()
+      .eq('id', parseInt(id))
+
+    if (deleteError) {
+      console.error('Failed to delete flagged content:', deleteError)
+      return NextResponse.json(
+        { error: 'Failed to delete flagged content' },
+        { status: 500 }
+      )
+    }
+
+    // Log the action
+    await logAdminAction(
+      admin.id,
+      'removed_from_queue',
+      'FlaggedContent',
+      parseInt(id),
+      { 
+        contentType: flaggedContent.contentType, 
+        contentId: flaggedContent.contentId,
+        reason: flaggedContent.reason 
+      }
+    )
+
+    console.log(`🗑️ Admin ${admin.id} removed flagged content #${id} from queue`)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('DELETE /api/admin/flagged-content error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

@@ -91,8 +91,14 @@ export async function PATCH(
       )
     }
 
+    // Check if user is admin or moderator
+    const userRole = currentUser.profile.role?.toUpperCase()
+    const isAdminOrModerator = userRole === 'ADMIN' || userRole === 'MODERATOR'
+    const isOwner = Number(listing.sellerId) === Number(currentUser.profile.id)
+
     // Compare using Number() to handle potential type mismatches
-    if (Number(listing.sellerId) !== Number(currentUser.profile.id)) {
+    // Allow admins and moderators to edit any listing
+    if (!isOwner && !isAdminOrModerator) {
       return NextResponse.json(
         { error: 'Not authorized to update this listing' },
         { status: 403 }

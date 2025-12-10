@@ -144,7 +144,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// PATCH /api/events/[id] - Update event (organizer only)
+// PATCH /api/events/[id] - Update event (organizer or admin/moderator)
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     // Authentication
@@ -164,9 +164,24 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const rateLimitResponse = rateLimit(rateLimitIdentifier, RateLimits.STRICT)
     if (rateLimitResponse) return rateLimitResponse
 
-    // Authorization - verify ownership
+    const supabase = await sbServer()
+
+    // Check if user is admin or moderator
+    const { data: profile } = await supabase
+      .from('Profile')
+      .select('role')
+      .eq('supabaseId', user.supabaseId)
+      .single()
+
+    const userRole = profile?.role?.toUpperCase()
+    const isAdminOrModerator = userRole === 'ADMIN' || userRole === 'MODERATOR'
+
+    // Authorization - verify ownership OR admin/moderator status
     const canModify = await canModifyEvent(user.id, eventId)
-    await assertOwnership(canModify)
+    
+    if (!canModify && !isAdminOrModerator) {
+      return NextResponse.json({ error: 'Only the organizer or admin can edit this event' }, { status: 403 })
+    }
 
     // Validation
     const validation = await validateRequest(req, updateEventSchema)
@@ -199,8 +214,24 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     
     if (endTime !== undefined) updateData.endTime = endTime
 
-    const supabase = await sbServer()
-    const { data: updatedEvent, error } = await supabase
+    // For admin updates, use service role to bypass RLS
+    let updateClient = supabase
+    if (!canModify && isAdminOrModerator) {
+      console.log('🔓 Using service role for admin event update')
+      const { createClient } = await import('@supabase/supabase-js')
+      updateClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    }
+
+    const { data: updatedEvent, error } = await updateClient
       .from('Event')
       .update(updateData)
       .eq('id', eventId)

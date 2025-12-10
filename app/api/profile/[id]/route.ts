@@ -18,7 +18,7 @@ export async function GET(
     // Fetch basic profile info (public data only)
     const { data: profile, error: profileError } = await supabase
       .from('Profile')
-      .select('id, name, avatarUrl, phoneVerified, bio, createdAt, isSuspended')
+      .select('id, name, avatarUrl, bio, createdAt, isSuspended')
       .eq('id', profileId)
       .single();
 
@@ -60,7 +60,6 @@ export async function GET(
         id: profile.id,
         name: profile.name,
         avatarUrl: profile.avatarUrl,
-        phoneVerified: profile.phoneVerified,
         bio: profile.bio,
         createdAt: profile.createdAt,
         listingsCount: listingsCount || 0,
